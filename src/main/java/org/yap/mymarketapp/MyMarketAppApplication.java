@@ -12,16 +12,4 @@ public class MyMarketAppApplication {
 		SpringApplication.run(MyMarketAppApplication.class, args);
 	}
 
-
-	@Bean
-	public CommandLineRunner checkThymeleaf() {
-		return args -> {
-			try {
-				Class.forName("org.thymeleaf.spring6.SpringTemplateEngine");
-				System.out.println("✅ Thymeleaf is in classpath!");
-			} catch (ClassNotFoundException e) {
-				System.out.println("❌ Thymeleaf NOT found in classpath!");
-			}
-		};
-	}
 }
