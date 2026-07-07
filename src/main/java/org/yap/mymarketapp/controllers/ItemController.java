@@ -1,26 +1,43 @@
 package org.yap.mymarketapp.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.yap.mymarketapp.dtos.*;
+import org.yap.mymarketapp.repositories.ItemRepository;
+import org.yap.mymarketapp.services.ItemService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 public class ItemController {
 
+    @Autowired
+    public ItemService service;
 
     /// Получение списка товаров, список списков по три штуки
     @GetMapping({"/", "/items"})
-    public List<List<ItemDto>> searchItems(@RequestParam String search,
-                                           @RequestParam SortFieldEnum sort,
-                                           @RequestParam int pageNumber,
-                                           @RequestParam int pageSize) {
-        // TODO: вычитать из базы
+    public ModelAndView searchItems(@RequestParam(required = false) String search,
+                                           @RequestParam(required = false) Optional<SortFieldEnum> sort,
+                                           @RequestParam(required = false) Optional<Integer> pageNumber,
+                                           @RequestParam(required = false) Optional<Integer> pageSize) {
 
-        return List.of(
-                List.of(new ItemDto(), new ItemDto(), new ItemDto())
-        );
+        var response = service.getAll(new SearchRequest(
+                search,
+                sort.orElseGet(() -> SortFieldEnum.NO),
+                pageNumber.orElseGet(() -> 0),
+                pageSize.orElseGet(() -> 5)));
+
+        ModelAndView modelAndView = new ModelAndView("items");
+
+        modelAndView.addObject("items", response.getItems());
+        modelAndView.addObject("search", response.getSearch());
+        modelAndView.addObject("sort", response.getSort());
+        modelAndView.addObject("paging", response.getPaging());
+
+        return modelAndView;
     }
 
     /// Увеличение или уменьшение количества товара в корзине со страницы товаров в корзине

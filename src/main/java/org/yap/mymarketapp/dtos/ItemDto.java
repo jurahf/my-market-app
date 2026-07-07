@@ -1,6 +1,6 @@
 package org.yap.mymarketapp.dtos;
 
-public class ItemDto extends ParamsDto {
+public class ItemDto {
 
     public long id;
 
@@ -14,52 +14,36 @@ public class ItemDto extends ParamsDto {
 
     public int count;
 
+    public ItemDto(long id, String title, String description, String imgPath, long price, int count) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.imgPath = imgPath;
+        this.price = price;
+        this.count = count;
+    }
 
-    public long getId() {
+    public long id() {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
+    public String title() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
+    public String description() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getImgPath() {
+    public String imgPath() {
         return imgPath;
     }
 
-    public void setImgPath(String imgPath) {
-        this.imgPath = imgPath;
-    }
-
-    public long getPrice() {
+    public long price() {
         return price;
     }
 
-    public void setPrice(long price) {
-        this.price = price;
-    }
-
-    public int getCount() {
+    public int count() {
         return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
     }
 }

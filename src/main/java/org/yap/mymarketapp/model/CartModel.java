@@ -1,0 +1,56 @@
+package org.yap.mymarketapp.model;
+
+import jakarta.persistence.*;
+
+/// Товары в корзине. Корзина у нас только одна, поэтому делаем просто 1 к 1
+@Entity
+@Table(name = "cart")
+public class CartModel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    public long id;
+
+    @Column(name = "item_id", nullable = false)
+    public long itemId;
+
+    @Column(name = "count", nullable = false)
+    public int count;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id", referencedColumnName = "id", insertable = false, updatable = false)
+    public ItemModel Item;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(long itemId) {
+        this.itemId = itemId;
+    }
+
+    public ItemModel getItem() {
+        return Item;
+    }
+
+    public void setItem(ItemModel item) {
+        Item = item;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+}
