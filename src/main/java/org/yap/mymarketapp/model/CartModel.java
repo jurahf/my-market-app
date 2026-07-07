@@ -22,6 +22,15 @@ public class CartModel {
     @JoinColumn(name = "item_id", referencedColumnName = "id", insertable = false, updatable = false)
     public ItemModel Item;
 
+    public CartModel() {
+
+    }
+
+    public CartModel(long itemId, int count) {
+        this.itemId = itemId;
+        this.count = count;
+    }
+
     public long getId() {
         return id;
     }

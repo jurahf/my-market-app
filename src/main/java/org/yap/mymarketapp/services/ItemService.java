@@ -7,11 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.yap.mymarketapp.dtos.*;
+import org.yap.mymarketapp.model.CartModel;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.ItemRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -91,4 +93,6 @@ public class ItemService {
             default -> Sort.unsorted();
         };
     }
+
+
 }

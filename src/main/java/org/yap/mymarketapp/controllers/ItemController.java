@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.yap.mymarketapp.dtos.*;
-import org.yap.mymarketapp.repositories.ItemRepository;
+import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 
 import java.util.List;
@@ -16,6 +16,9 @@ public class ItemController {
 
     @Autowired
     public ItemService service;
+
+    @Autowired
+    public CartService cartService;
 
     /// Получение списка товаров, список списков по три штуки
     @GetMapping({"/", "/items"})
@@ -34,7 +37,7 @@ public class ItemController {
 
         modelAndView.addObject("items", response.getItems());
         modelAndView.addObject("search", response.getSearch());
-        modelAndView.addObject("sort", response.getSort());
+        modelAndView.addObject("sort", response.getSort().toString());
         modelAndView.addObject("paging", response.getPaging());
 
         return modelAndView;
@@ -42,15 +45,15 @@ public class ItemController {
 
     /// Увеличение или уменьшение количества товара в корзине со страницы товаров в корзине
     @PostMapping("/items")
-    public String itemsToCart(@RequestParam long id,
-                              @RequestParam String search,
-                              @RequestParam SortFieldEnum sort,
-                              @RequestParam int pageNumber,
-                              @RequestParam int pageSize,
-                              @RequestParam CartActionEnum action) {
-        // TODO: изменить количество товара в корзине
+    public String itemsToCart(@RequestParam(required = true) long id,
+                              @RequestParam(required = false) String search,
+                              @RequestParam(required = false) SortFieldEnum sort,
+                              @RequestParam(required = false) Integer pageNumber,
+                              @RequestParam(required = false) Integer pageSize,
+                              @RequestParam(required = true) CartActionEnum action) {
+        cartService.toCart(id, action);
 
-        return "redirect:/items?search=[search]&sort=[sort]&pageNumber=[pageNumber]&pageSize=[pageSize]";
+        return String.format("redirect:/items?search=%s&sort=%s&pageNumber=%d&pageSize=%d", search, sort, pageNumber, pageSize);
     }
 
     /// уменьшения/увеличения количества товара в корзине со страницы товара в корзине
