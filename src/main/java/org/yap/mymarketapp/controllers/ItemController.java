@@ -56,28 +56,24 @@ public class ItemController {
         return String.format("redirect:/items?search=%s&sort=%s&pageNumber=%d&pageSize=%d", search, sort, pageNumber, pageSize);
     }
 
-    /// уменьшения/увеличения количества товара в корзине со страницы товара в корзине
+    /// Уменьшение/увеличение количества товара в корзине со страницы товара в корзине
     @PostMapping("items/{id}")
     public String itemsToCart(@PathVariable long id, @RequestParam CartActionEnum action) {
-        // TODO: изменить количество товара в корзине
+        cartService.toCart(id, action);
 
-        return getItem(id);
+        return String.format("redirect:/items/%d", id);
     }
 
-    ///
+    /// Получение страницы с товаром
     @GetMapping("items/{id}")
-    public String getItem(@PathVariable long id) {
-//        Атрибуты модели: (= ItemDTO)
-//        item — объект товара со следующими полями:
-//        long id — идентификатор товара,
-//        String title — название товара,
-//        String description — описание товара,
-//        String imgPath — путь к изображению товара,
-//        long price — цена товара,
-//        int count — число товаров в корзине (если 0, значит, не положен в корзину).
+    public ModelAndView getItem(@PathVariable long id) {
+        ItemDto item = service.getById(id);
 
-        // TODO: заполнить модель
-        return "item";
+        ModelAndView modelAndView = new ModelAndView("item");
+
+        modelAndView.addObject("item", item);
+
+        return modelAndView;
     }
 
 }

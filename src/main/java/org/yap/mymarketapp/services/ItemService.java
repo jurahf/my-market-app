@@ -23,6 +23,15 @@ public class ItemService {
     @Autowired
     public ItemRepository repository;
 
+    public ItemDto getById(long id) {
+        Optional<ItemModel> itemOpt = repository.findById(id);
+
+        if (itemOpt.isEmpty())
+            throw new IllegalArgumentException();
+
+        return convertFromDB(itemOpt.get());
+    }
+
     public SearchResponse getAll(SearchRequest request) {
 
         Pageable pageable = PageRequest.of(
@@ -41,14 +50,7 @@ public class ItemService {
         }
 
         List<ItemDto> dtos = page.getContent().stream()
-                .map(x -> new ItemDto(
-                        x.id,
-                        x.title,
-                        x.description,
-                        x.imgPath,
-                        x.price,
-                        x.getCart().map(c -> c.getCount()).orElse(0)
-                        )
+                .map(x -> convertFromDB(x)
                 )
                 .toList();
 
@@ -63,6 +65,17 @@ public class ItemService {
                         page.hasPrevious(),
                         page.hasNext()),
                 items);
+    }
+
+    private ItemDto convertFromDB(ItemModel x) {
+        return new ItemDto(
+                x.id,
+                x.title,
+                x.description,
+                x.imgPath,
+                x.price,
+                x.getCart().map(c -> c.getCount()).orElse(0)
+        );
     }
 
     private List<List<ItemDto>> splitIntoChunks(List<ItemDto> list, int chunkSize) {
