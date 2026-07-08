@@ -8,7 +8,6 @@ import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 
-import java.util.List;
 import java.util.Optional;
 
 @Controller

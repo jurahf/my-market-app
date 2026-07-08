@@ -18,7 +18,7 @@ public class CartModel {
     @Column(name = "count", nullable = false)
     public int count;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id", referencedColumnName = "id", insertable = false, updatable = false)
     public ItemModel Item;
 
