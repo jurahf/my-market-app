@@ -10,17 +10,17 @@ public class CartModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public long id;
+    private long id;
 
     @Column(name = "item_id", nullable = false)
-    public long itemId;
+    private long itemId;
 
     @Column(name = "count", nullable = false)
-    public int count;
+    private int count;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id", referencedColumnName = "id", insertable = false, updatable = false)
-    public ItemModel Item;
+    private ItemModel Item;
 
     public CartModel() {
 

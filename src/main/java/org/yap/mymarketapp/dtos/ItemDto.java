@@ -2,17 +2,17 @@ package org.yap.mymarketapp.dtos;
 
 public class ItemDto {
 
-    public long id;
+    private long id;
 
-    public String title;
+    private String title;
 
-    public String description;
+    private String description;
 
-    public String imgPath;
+    private String imgPath;
 
-    public long price;
+    private long price;
 
-    public int count;
+    private int count;
 
     public ItemDto(long id, String title, String description, String imgPath, long price, int count) {
         this.id = id;

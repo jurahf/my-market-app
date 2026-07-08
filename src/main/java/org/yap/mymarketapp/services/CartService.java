@@ -43,7 +43,7 @@ public class CartService {
 
             if (cart.getCount() <= 0) {
                 cart.getItem().setCart(null);
-                repository.deleteById(cart.id);
+                repository.deleteById(cart.getId());
             }
             else
                 repository.save(cart);
@@ -58,15 +58,15 @@ public class CartService {
 
         for (var cart : cartList) {
             itemDtos.add(new ItemDto(
-                cart.itemId,
-                cart.Item.title,
-                cart.Item.description,
-                cart.Item.imgPath,
-                cart.Item.price,
-                cart.count
+                cart.getItemId(),
+                cart.getItem().getTitle(),
+                cart.getItem().getDescription(),
+                cart.getItem().getImgPath(),
+                cart.getItem().getPrice(),
+                cart.getCount()
             ));
 
-            totalSum += cart.count * cart.Item.price;
+            totalSum += cart.getCount() * cart.getItem().getPrice();
         }
 
         return new CartResponse(itemDtos, totalSum);

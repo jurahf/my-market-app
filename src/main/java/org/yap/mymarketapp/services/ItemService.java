@@ -69,11 +69,11 @@ public class ItemService {
 
     private ItemDto convertFromDB(ItemModel x) {
         return new ItemDto(
-                x.id,
-                x.title,
-                x.description,
-                x.imgPath,
-                x.price,
+                x.getId(),
+                x.getTitle(),
+                x.getDescription(),
+                x.getImgPath(),
+                x.getPrice(),
                 x.getCart().map(c -> c.getCount()).orElse(0)
         );
     }

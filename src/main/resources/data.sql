@@ -29,3 +29,10 @@ INSERT INTO item (title, description, img_path, price) VALUES
 -- Вставка данных в корзину (связь с первым товаром - Xiaomi Redmi Note 11)
 INSERT INTO cart (item_id, count) VALUES
     (1, 2);  -- 2 штуки Xiaomi Redmi Note 11 в корзине
+
+-- Вставка заказа
+INSERT INTO orders (total_sum) VALUES (44998);
+
+INSERT INTO order_items (order_id, item_id) VALUES
+                                                (1, 1),  -- Смартфон Xiaomi Redmi Note 11
+                                                (1, 5);  -- Монитор Samsung Odyssey G5

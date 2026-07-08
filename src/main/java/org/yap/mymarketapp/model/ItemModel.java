@@ -11,20 +11,22 @@ public class ItemModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public long id;
+    private long id;
 
     @Column(name = "title", nullable = false, length = 255)
-    public String title;
+    private String title;
 
     @Column(name = "description", columnDefinition = "TEXT")
-    public String description;
+    private String description;
 
     @Column(name = "img_path", length = 500)
-    public String imgPath;
+    private String imgPath;
 
     @Column(name = "price", nullable = false)
-    public long price;
+    private long price;
 
+    @OneToOne(mappedBy = "Item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private CartModel cart;
 
     public Optional<CartModel> getCart() {
         return Optional.ofNullable(cart);
@@ -33,10 +35,6 @@ public class ItemModel {
     public void setCart(CartModel cart) {
         this.cart = cart;
     }
-
-    @OneToOne(mappedBy = "Item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private CartModel cart;
-
 
     public long getId() {
         return id;
