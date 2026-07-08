@@ -42,7 +42,8 @@ public class CartService {
             }
 
             if (cart.getCount() <= 0) {
-                cart.getItem().setCart(null);
+                if (cart.getItem() != null)
+                    cart.getItem().setCart(null);
                 repository.deleteById(cart.getId());
             }
             else
