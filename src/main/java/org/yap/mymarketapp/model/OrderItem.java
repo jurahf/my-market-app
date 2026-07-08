@@ -23,12 +23,12 @@ public class OrderItem {
     private ItemModel item;
 
     @Column(nullable = false)
-    private Long count;
+    private int count;
 
     public OrderItem() {
     }
 
-    public OrderItem(OrderModel order, ItemModel item, Long count) {
+    public OrderItem(OrderModel order, ItemModel item, int count) {
         this.order = order;
         this.item = item;
         this.count = count;
@@ -61,11 +61,11 @@ public class OrderItem {
         this.item = item;
     }
 
-    public Long getCount() {
+    public int getCount() {
         return count;
     }
 
-    public void setCount(Long count) {
+    public void setCount(int count) {
         this.count = count;
     }
 

@@ -3,6 +3,7 @@ package org.yap.mymarketapp.model;
 import jakarta.persistence.*;
 import org.yap.mymarketapp.dtos.ItemDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -14,18 +15,20 @@ public class OrderModel {
     @Column(name = "id")
     private long id;
 
-    @ManyToMany
-    @JoinTable(
-            name = "order_items",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
-    private List<ItemModel> items;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     @Column(name = "total_sum")
     private long totalSum;
 
 
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
 
     public long getId() {
         return id;
@@ -33,14 +36,6 @@ public class OrderModel {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public List<ItemModel> getItems() {
-        return items;
-    }
-
-    public void setItems(List<ItemModel> items) {
-        this.items = items;
     }
 
     public long getTotalSum() {

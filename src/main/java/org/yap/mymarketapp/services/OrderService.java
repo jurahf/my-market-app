@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
 import org.yap.mymarketapp.model.ItemModel;
+import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
@@ -42,18 +43,19 @@ public class OrderService {
     public long createOrder() {
         var itemsList = cartRepository.findAll();
 
-        List<ItemModel> items = new ArrayList<>();
+        List<OrderItem> items = new ArrayList<>();
+        OrderModel newOrder = new OrderModel();
         long totalSum = 0;
 
         for (var cart : itemsList) {
-            items.add(cart.getItem());
+            items.add(new OrderItem(newOrder, cart.getItem(), cart.getCount()));
+
             cart.getItem().setCart(null);
 
             totalSum += cart.getCount() * cart.getItem().getPrice();
         }
 
-        OrderModel newOrder = new OrderModel();
-        newOrder.setItems(items);
+        newOrder.setOrderItems(items);
         newOrder.setTotalSum(totalSum);
 
         var saved = repository.save(newOrder);
@@ -66,7 +68,8 @@ public class OrderService {
     private OrderDto convertToDto(OrderModel x) {
         return new OrderDto(
                 x.getId(),
-                x.getItems().stream()
+                x.getOrderItems().stream()
+                        .map(y -> y.getItem())
                         .map(y -> new ItemDto(
                                 y.getId(),
                                 y.getTitle(),
