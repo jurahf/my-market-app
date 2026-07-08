@@ -1,19 +1,27 @@
 package org.yap.mymarketapp.services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
+import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.model.OrderModel;
+import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService {
 
     @Autowired
     public OrderRepository repository;
+
+    @Autowired
+    public CartRepository cartRepository;
 
 
     public List<OrderDto> getAll() {
@@ -22,6 +30,37 @@ public class OrderService {
         return modelList.stream()
                 .map(x -> convertToDto(x))
                 .toList();
+    }
+
+    public OrderDto getById(long id) {
+        OrderModel order = repository.findById(id).orElseThrow();
+
+        return convertToDto(order);
+    }
+
+    /// Новый заказ - берем все, что было в корзине, и переносим в заказ. Корзину очищаем
+    @Transactional
+    public long createOrder() {
+        var itemsList = cartRepository.findAll();
+
+        List<ItemModel> items = new ArrayList<>();
+        long totalSum = 0;
+
+        for (var cart : itemsList) {
+            items.add(cart.getItem());
+            cart.getItem().setCart(null);
+
+            totalSum += cart.getCount() * cart.getItem().getPrice();
+        }
+
+        OrderModel newOrder = new OrderModel();
+        newOrder.setItems(items);
+        newOrder.setTotalSum(totalSum);
+
+        var saved = repository.save(newOrder);
+        cartRepository.deleteAll();
+
+        return saved.getId();
     }
 
 
@@ -41,4 +80,5 @@ public class OrderService {
                 x.getTotalSum()
                 );
     }
+
 }
