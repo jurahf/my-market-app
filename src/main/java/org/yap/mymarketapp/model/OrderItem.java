@@ -2,24 +2,20 @@ package org.yap.mymarketapp.model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
 
-    @EmbeddedId
-    private OrderItemId id = new OrderItemId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @MapsId("orderId")
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", referencedColumnName = "id")
     private OrderModel order;
 
     @ManyToOne
-    @MapsId("itemId")
-    @JoinColumn(name = "item_id")
+    @JoinColumn(name = "item_id", referencedColumnName = "id")
     private ItemModel item;
 
     @Column(nullable = false)
@@ -32,16 +28,13 @@ public class OrderItem {
         this.order = order;
         this.item = item;
         this.count = count;
-        this.id.orderId = order.getId();
-        this.id.itemId = item.getId();
     }
 
-    // Геттеры и сеттеры
-    public OrderItemId getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(OrderItemId id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -69,16 +62,4 @@ public class OrderItem {
         this.count = count;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OrderItem that = (OrderItem) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

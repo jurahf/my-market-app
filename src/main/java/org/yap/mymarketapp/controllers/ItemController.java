@@ -8,7 +8,6 @@ import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 
-import java.util.Optional;
 
 @Controller
 public class ItemController {
@@ -25,15 +24,15 @@ public class ItemController {
     /// Получение списка товаров, список списков по три штуки
     @GetMapping({"/", "/items"})
     public ModelAndView searchItems(@RequestParam(required = false) String search,
-                                           @RequestParam(required = false) Optional<SortFieldEnum> sort,
-                                           @RequestParam(required = false) Optional<Integer> pageNumber,
-                                           @RequestParam(required = false) Optional<Integer> pageSize) {
+                                           @RequestParam(required = false, defaultValue = "NO") SortFieldEnum sort,
+                                           @RequestParam(required = false, defaultValue = "0") int pageNumber,
+                                           @RequestParam(required = false, defaultValue = "5") int pageSize) {
 
         var response = service.getAll(new SearchRequest(
                 search,
-                sort.orElseGet(() -> SortFieldEnum.NO),
-                pageNumber.orElseGet(() -> 0),
-                pageSize.orElseGet(() -> 5)));
+                sort,
+                pageNumber,
+                pageSize));
 
         ModelAndView modelAndView = new ModelAndView("items");
 

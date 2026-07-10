@@ -6,17 +6,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.OrderDto;
 import org.yap.mymarketapp.model.CartModel;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
+import org.yap.mymarketapp.services.CheckoutService;
 import org.yap.mymarketapp.services.OrderService;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @SpringBootTest
 @TestPropertySource(properties = {
@@ -24,7 +28,10 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.sql.init.mode=never"
 })
 @Transactional
-class OrderServiceIntegrationTests {
+class CheckoutServiceIntegrationTests {
+
+    @Autowired
+    private CheckoutService checkoutService;
 
     @Autowired
     private OrderService orderService;
@@ -76,7 +83,7 @@ class OrderServiceIntegrationTests {
     @Test
     void createOrder_IntegrationTest() {
         // Act
-        Long orderId = orderService.createOrder();
+        Long orderId = checkoutService.createOrder();
 
         // Assert
         assertThat(orderId).isNotNull();
@@ -96,7 +103,7 @@ class OrderServiceIntegrationTests {
     @Test
     void getAll_IntegrationTest() {
         // Arrange
-        Long orderId = orderService.createOrder();
+        Long orderId = checkoutService.createOrder();
 
         // Act
         List<OrderDto> orders = orderService.getAll();
@@ -106,4 +113,17 @@ class OrderServiceIntegrationTests {
         assertThat(orders.get(0).id()).isEqualTo(orderId);
         assertThat(orders.get(0).items()).hasSize(2);
     }
+
+    @Test
+    void createOrder_ShouldHandleEmptyCart() {
+        // Arrange
+        cartRepository.deleteAll();
+
+        // Act and Assert
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () ->  checkoutService.createOrder()
+        );
+    }
+
 }

@@ -3,7 +3,7 @@ package org.yap.mymarketapp.controllers;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.yap.mymarketapp.dtos.OrderDto;
@@ -12,6 +12,7 @@ import org.yap.mymarketapp.services.OrderService;
 import java.util.List;
 
 @Controller
+@RequestMapping("/orders")
 public class OrderController {
 
     private final OrderService service;
@@ -21,7 +22,7 @@ public class OrderController {
     }
 
     /// Получение страницы со списком заказов
-    @GetMapping("/orders")
+    @GetMapping()
     public ModelAndView getAll() {
 
         List<OrderDto> orders = service.getAll();
@@ -35,7 +36,7 @@ public class OrderController {
 
 
     /// Страница заказа
-    @GetMapping("/orders/{id}")
+    @GetMapping("/{id}")
     public ModelAndView getOrCreateOrder(@PathVariable long id, @RequestParam(required = false) boolean newOrder) {
 
         OrderDto order = service.getById(id);
@@ -47,13 +48,5 @@ public class OrderController {
 
         return modelAndView;
     }
-
-    @PostMapping("/buy")
-    public String buy() {
-        long id = service.createOrder();
-
-        return String.format("redirect:/orders/%d?newOrder=true", id);
-    }
-
 
 }

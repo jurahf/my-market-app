@@ -6,12 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
-import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
-import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,11 +16,8 @@ public class OrderService {
 
     private final OrderRepository repository;
 
-    private final CartRepository cartRepository;
-
-    public OrderService(OrderRepository repository, CartRepository cartRepository) {
+    public OrderService(OrderRepository repository) {
         this.repository = repository;
-        this.cartRepository = cartRepository;
     }
 
     @Transactional(readOnly = true)
@@ -41,32 +35,6 @@ public class OrderService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         return convertToDto(order);
-    }
-
-    /// Новый заказ - берем все, что было в корзине, и переносим в заказ. Корзину очищаем
-    @Transactional
-    public long createOrder() {
-        var itemsList = cartRepository.findAll();
-
-        List<OrderItem> items = new ArrayList<>();
-        OrderModel newOrder = new OrderModel();
-        long totalSum = 0;
-
-        for (var cart : itemsList) {
-            items.add(new OrderItem(newOrder, cart.getItem(), cart.getCount()));
-
-            cart.getItem().setCart(null);
-
-            totalSum += cart.getCount() * cart.getItem().getPrice();
-        }
-
-        newOrder.setOrderItems(items);
-        newOrder.setTotalSum(totalSum);
-
-        var saved = repository.save(newOrder);
-        cartRepository.deleteAll();
-
-        return saved.getId();
     }
 
 

@@ -18,7 +18,7 @@ public class OrderModel {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @Column(name = "total_sum")
+    @Column(name = "total_sum", nullable = false)
     private long totalSum;
 
 

@@ -40,8 +40,6 @@ class OrderServiceTests {
     private ItemModel item1;
     private ItemModel item2;
     private OrderModel orderModel;
-    private CartModel cart1;
-    private CartModel cart2;
 
     @BeforeEach
     void setUp() {
@@ -58,16 +56,6 @@ class OrderServiceTests {
         item2.setDescription("Description 2");
         item2.setPrice(200L);
         item2.setImgPath("/img2.jpg");
-
-        cart1 = new CartModel();
-        cart1.setId(1L);
-        cart1.setItem(item1);
-        cart1.setCount(2);
-
-        cart2 = new CartModel();
-        cart2.setId(2L);
-        cart2.setItem(item2);
-        cart2.setCount(1);
 
         orderModel = new OrderModel();
         orderModel.setId(1L);
@@ -126,43 +114,5 @@ class OrderServiceTests {
 
         verify(orderRepository).findById(999L);
         verify(orderRepository, never()).getItemCountInOrder(anyLong(), anyLong());
-    }
-
-    @Test
-    void createOrder_ShouldHandleEmptyCart() {
-        // Arrange
-        when(cartRepository.findAll()).thenReturn(List.of());
-
-        OrderModel emptyOrder = new OrderModel();
-        emptyOrder.setId(2L);
-        emptyOrder.setOrderItems(List.of());
-        emptyOrder.setTotalSum(0L);
-
-        when(orderRepository.save(any(OrderModel.class))).thenReturn(emptyOrder);
-
-        // Act
-        Long orderId = orderService.createOrder();
-
-        // Assert
-        assertThat(orderId).isEqualTo(2L);
-
-        verify(cartRepository).findAll();
-        verify(orderRepository).save(any(OrderModel.class));
-        verify(cartRepository).deleteAll();
-    }
-
-    @Test
-    void createOrder_ShouldCalculateTotalSumCorrectly() {
-        // Arrange
-        when(cartRepository.findAll()).thenReturn(List.of(cart1, cart2));
-        when(orderRepository.save(any(OrderModel.class))).thenReturn(orderModel);
-
-        // Act
-        orderService.createOrder();
-
-        // Assert
-        verify(orderRepository).save(argThat(order ->
-                order.getTotalSum() == 400L // 100*2 + 200*1
-        ));
     }
 }
