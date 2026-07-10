@@ -1,12 +1,14 @@
 package org.yap.mymarketapp.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.yap.mymarketapp.model.CartModel;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CartRepository extends JpaRepository<CartModel, Long> {
-    List<CartModel> findByItemId(Long itemId);
+    Optional<CartModel> findByItemId(@Param("itemId") Long itemId);
 }

@@ -1,11 +1,13 @@
 package org.yap.mymarketapp.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.ItemRepository;
@@ -19,29 +21,34 @@ import java.util.stream.IntStream;
 @Service
 public class ItemService {
 
-    @Autowired
-    public ItemRepository repository;
+    private final ItemRepository repository;
 
+    public ItemService(ItemRepository repository) {
+        this.repository = repository;
+    }
+
+    @Transactional(readOnly = true)
     public ItemDto getById(long id) {
         Optional<ItemModel> itemOpt = repository.findById(id);
 
         if (itemOpt.isEmpty())
-            throw new IllegalArgumentException();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);;
 
         return convertFromDB(itemOpt.get());
     }
 
+    @Transactional(readOnly = true)
     public SearchResponse getAll(SearchRequest request) {
 
         Pageable pageable = PageRequest.of(
-                request.pageNumber < 1 ? 0 : request.pageNumber - 1,
-                request.pageSize < 0 ? 5 : request.pageSize,
-                getSort(request.sort));
+                request.pageNumber() < 1 ? 0 : request.pageNumber() - 1,
+                request.pageSize() < 0 ? 5 : request.pageSize(),
+                getSort(request.sort()));
 
         Page<ItemModel> page;
-        if (request.search != null && !request.search.isEmpty()) {
+        if (request.search() != null && !request.search().isEmpty()) {
              page = repository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                    request.search, request.search, pageable
+                    request.search(), request.search(), pageable
             );
         }
         else {
@@ -56,11 +63,11 @@ public class ItemService {
         var items = splitIntoChunks(dtos, 3);
 
         return new SearchResponse(
-                request.search,
-                request.sort,
+                request.search(),
+                request.sort(),
                 new PagingDto(
-                        request.pageSize,
-                        request.pageNumber,
+                        request.pageSize(),
+                        request.pageNumber(),
                         page.hasPrevious(),
                         page.hasNext()),
                 items);
@@ -101,7 +108,7 @@ public class ItemService {
 
         return switch (sort) {
             case ALPHA -> Sort.by("title").ascending();
-            case PRICE -> Sort.by("description").ascending();
+            case PRICE -> Sort.by("price").ascending();
             default -> Sort.unsorted();
         };
     }

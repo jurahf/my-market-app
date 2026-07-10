@@ -31,7 +31,7 @@ INSERT INTO cart (item_id, count) VALUES
     (1, 2);  -- 2 штуки Xiaomi Redmi Note 11 в корзине
 
 -- Вставка заказа
-INSERT INTO orders (total_sum) VALUES (44998);
+INSERT INTO orders (total_sum) VALUES (41998);
 
 INSERT INTO order_items (order_id, item_id) VALUES
                                                 (1, 1),  -- Смартфон Xiaomi Redmi Note 11

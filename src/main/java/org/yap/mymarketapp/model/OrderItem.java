@@ -82,14 +82,3 @@ public class OrderItem {
         return Objects.hash(id);
     }
 }
-
-@Embeddable
-class OrderItemId implements Serializable {
-
-    @Column(name = "order_id")
-    public Long orderId;
-
-    @Column(name = "item_id")
-    public Long itemId;
-
-}

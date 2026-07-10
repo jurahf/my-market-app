@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.sql.init.mode=never"
 })
-@Transactional
 class CartServiceIntegrationTests {
 
     @Autowired
@@ -54,9 +53,9 @@ class CartServiceIntegrationTests {
         cartService.toCart(item.getId(), CartActionEnum.PLUS);
 
         // Assert
-        CartModel cart = cartRepository.findByItemId(item.getId()).get(0);
+        CartModel cart = cartRepository.findByItemId(item.getId()).get();
         assertThat(cart).isNotNull();
-        assertThat(cart.getItemId()).isEqualTo(item.getId());
+        assertThat(cart.getItem().getId()).isEqualTo(item.getId());
         assertThat(cart.getCount()).isEqualTo(1);
     }
 
@@ -69,7 +68,7 @@ class CartServiceIntegrationTests {
         cartService.toCart(item.getId(), CartActionEnum.PLUS);
 
         // Assert
-        CartModel cart = cartRepository.findByItemId(item.getId()).get(0);
+        CartModel cart = cartRepository.findByItemId(item.getId()).get();
         assertThat(cart.getCount()).isEqualTo(2);
     }
 
@@ -83,7 +82,7 @@ class CartServiceIntegrationTests {
         cartService.toCart(item.getId(), CartActionEnum.MINUS);
 
         // Assert
-        CartModel cart = cartRepository.findByItemId(item.getId()).get(0);
+        CartModel cart = cartRepository.findByItemId(item.getId()).get();
         assertThat(cart.getCount()).isEqualTo(1);
     }
 
@@ -95,8 +94,10 @@ class CartServiceIntegrationTests {
         // Act
         cartService.toCart(item.getId(), CartActionEnum.MINUS);
 
+        var all = cartRepository.findAll();
+
         // Assert
-        assertThat(cartRepository.findByItemId(item.getId())).isEmpty();
+        assertThat(cartRepository.findByItemId(item.getId()).isEmpty()).isTrue();
     }
 
     @Test
@@ -108,7 +109,7 @@ class CartServiceIntegrationTests {
         cartService.toCart(item.getId(), CartActionEnum.DELETE);
 
         // Assert
-        assertThat(cartRepository.findByItemId(item.getId())).isEmpty();
+        assertThat(cartRepository.findByItemId(item.getId()).isEmpty()).isTrue();
     }
 
     @Test

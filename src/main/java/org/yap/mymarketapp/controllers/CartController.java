@@ -12,8 +12,11 @@ import org.yap.mymarketapp.services.CartService;
 @RequestMapping("/cart")
 public class CartController {
 
-    @Autowired
-    public CartService service;
+    private final CartService service;
+
+    public CartController(CartService service) {
+        this.service = service;
+    }
 
     /// Получение страницы со списком товаров в корзине
     @GetMapping("/items")

@@ -1,9 +1,9 @@
 package org.yap.mymarketapp.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
@@ -13,11 +13,14 @@ import java.util.Optional;
 @Controller
 public class ItemController {
 
-    @Autowired
-    public ItemService service;
+    private final ItemService service;
 
-    @Autowired
-    public CartService cartService;
+    private final CartService cartService;
+
+    public ItemController(ItemService service, CartService cartService) {
+        this.service = service;
+        this.cartService = cartService;
+    }
 
     /// Получение списка товаров, список списков по три штуки
     @GetMapping({"/", "/items"})
@@ -34,10 +37,10 @@ public class ItemController {
 
         ModelAndView modelAndView = new ModelAndView("items");
 
-        modelAndView.addObject("items", response.getItems());
-        modelAndView.addObject("search", response.getSearch());
-        modelAndView.addObject("sort", response.getSort().toString());
-        modelAndView.addObject("paging", response.getPaging());
+        modelAndView.addObject("items", response.items());
+        modelAndView.addObject("search", response.search());
+        modelAndView.addObject("sort", response.sort().toString());
+        modelAndView.addObject("paging", response.paging());
 
         return modelAndView;
     }
@@ -49,10 +52,24 @@ public class ItemController {
                               @RequestParam(required = false) SortFieldEnum sort,
                               @RequestParam(required = false) Integer pageNumber,
                               @RequestParam(required = false) Integer pageSize,
-                              @RequestParam(required = true) CartActionEnum action) {
+                              @RequestParam(required = true) CartActionEnum action,
+                              RedirectAttributes redirectAttributes) {
         cartService.toCart(id, action);
 
-        return String.format("redirect:/items?search=%s&sort=%s&pageNumber=%d&pageSize=%d", search, sort, pageNumber, pageSize);
+        if (search != null) {
+            redirectAttributes.addAttribute("search", search);
+        }
+        if (sort != null) {
+            redirectAttributes.addAttribute("sort", sort);
+        }
+        if (pageNumber != null) {
+            redirectAttributes.addAttribute("pageNumber", pageNumber);
+        }
+        if (pageSize != null) {
+            redirectAttributes.addAttribute("pageSize", pageSize);
+        }
+
+        return String.format("redirect:/items");
     }
 
     /// Уменьшение/увеличение количества товара в корзине со страницы товара в корзине

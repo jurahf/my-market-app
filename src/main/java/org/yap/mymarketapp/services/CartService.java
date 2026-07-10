@@ -1,12 +1,16 @@
 package org.yap.mymarketapp.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.CartActionEnum;
 import org.yap.mymarketapp.dtos.CartResponse;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.model.CartModel;
+import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
+import org.yap.mymarketapp.repositories.ItemRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +19,25 @@ import java.util.Optional;
 @Service
 public class CartService {
 
-    @Autowired
-    public CartRepository repository;
+    private final CartRepository repository;
 
+    private final ItemRepository itemRepository;
+
+    public CartService(CartRepository repository, ItemRepository itemRepository) {
+        this.repository = repository;
+        this.itemRepository = itemRepository;
+    }
+
+    @Transactional
     public void toCart(long itemId, CartActionEnum action) {
-        // TODO: не проверяется существование товара с таким id, только лежит ли он в корзине
+        ItemModel item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Optional<CartModel> cartOpt = repository.findByItemId(itemId).stream().findFirst();
+        Optional<CartModel> cartOpt = repository.findByItemId(itemId);
 
         if (cartOpt.isEmpty()) {
             if (action == CartActionEnum.PLUS) {
-                var cart = new CartModel(itemId, 1);
+                var cart = new CartModel(item, 1);
                 repository.save(cart);
             }
         }
@@ -44,6 +56,7 @@ public class CartService {
             if (cart.getCount() <= 0) {
                 if (cart.getItem() != null)
                     cart.getItem().setCart(null);
+
                 repository.deleteById(cart.getId());
             }
             else
@@ -51,6 +64,7 @@ public class CartService {
         }
     }
 
+    @Transactional(readOnly = true)
     public CartResponse getItemsInCart() {
         List<CartModel> cartList = repository.findAll();
 
@@ -59,7 +73,7 @@ public class CartService {
 
         for (var cart : cartList) {
             itemDtos.add(new ItemDto(
-                cart.getItemId(),
+                cart.getItem().getId(),
                 cart.getItem().getTitle(),
                 cart.getItem().getDescription(),
                 cart.getItem().getImgPath(),

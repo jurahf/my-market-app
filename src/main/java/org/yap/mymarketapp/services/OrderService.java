@@ -1,11 +1,11 @@
 package org.yap.mymarketapp.services;
 
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
-import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.repositories.CartRepository;
@@ -17,13 +17,16 @@ import java.util.List;
 @Service
 public class OrderService {
 
-    @Autowired
-    public OrderRepository repository;
+    private final OrderRepository repository;
 
-    @Autowired
-    public CartRepository cartRepository;
+    private final CartRepository cartRepository;
 
+    public OrderService(OrderRepository repository, CartRepository cartRepository) {
+        this.repository = repository;
+        this.cartRepository = cartRepository;
+    }
 
+    @Transactional(readOnly = true)
     public List<OrderDto> getAll() {
         List<OrderModel> modelList = repository.findAll();
 
@@ -32,8 +35,10 @@ public class OrderService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public OrderDto getById(long id) {
-        OrderModel order = repository.findById(id).orElseThrow();
+        OrderModel order = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         return convertToDto(order);
     }

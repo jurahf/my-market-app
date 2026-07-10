@@ -64,13 +64,11 @@ class OrderServiceIntegrationTests {
         // Add items to cart
         CartModel cart1 = new CartModel();
         cart1.setItem(item1);
-        cart1.setItemId(item1.getId());
         cart1.setCount(2);
         cartRepository.save(cart1);
 
         CartModel cart2 = new CartModel();
         cart2.setItem(item2);
-        cart2.setItemId(item2.getId());
         cart2.setCount(1);
         cartRepository.save(cart2);
     }

@@ -25,7 +25,7 @@ public class ItemModel {
     @Column(name = "price", nullable = false)
     private long price;
 
-    @OneToOne(mappedBy = "Item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)
     private CartModel cart;
 
     public Optional<CartModel> getCart() {
