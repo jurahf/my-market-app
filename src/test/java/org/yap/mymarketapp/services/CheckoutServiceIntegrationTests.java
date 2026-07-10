@@ -1,4 +1,4 @@
-package org.yap.mymarketapp;
+package org.yap.mymarketapp.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,8 +13,6 @@ import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
-import org.yap.mymarketapp.services.CheckoutService;
-import org.yap.mymarketapp.services.OrderService;
 
 import java.util.List;
 

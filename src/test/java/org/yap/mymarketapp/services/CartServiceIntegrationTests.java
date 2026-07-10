@@ -1,18 +1,16 @@
-package org.yap.mymarketapp;
+package org.yap.mymarketapp.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 import org.yap.mymarketapp.dtos.CartActionEnum;
 import org.yap.mymarketapp.dtos.CartResponse;
 import org.yap.mymarketapp.model.CartModel;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
-import org.yap.mymarketapp.services.CartService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

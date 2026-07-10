@@ -1,21 +1,17 @@
-package org.yap.mymarketapp;
+package org.yap.mymarketapp.services;
 
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
-import org.yap.mymarketapp.model.CartModel;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
-import org.yap.mymarketapp.services.OrderService;
 
 import java.util.List;
 import java.util.Optional;
