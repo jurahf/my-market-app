@@ -1,34 +1,17 @@
 package org.yap.mymarketapp.model;
 
-import jakarta.persistence.*;
-import org.yap.mymarketapp.dtos.ItemDto;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Entity
-@Table(name = "orders")
+@Table("orders")
 public class OrderModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private long id;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
-
-    @Column(name = "total_sum", nullable = false)
+    @Column("total_sum")
     private long totalSum;
-
-
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
 
     public long getId() {
         return id;

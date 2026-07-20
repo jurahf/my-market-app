@@ -2,58 +2,57 @@ package org.yap.mymarketapp.services;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
 import org.yap.mymarketapp.model.OrderModel;
+import org.yap.mymarketapp.repositories.OrderItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
-
-import java.util.List;
+import org.yap.mymarketapp.repositories.ItemRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class OrderService {
 
-    private final OrderRepository repository;
+    private final OrderRepository orderRepository;
 
-    public OrderService(OrderRepository repository) {
-        this.repository = repository;
+    private final OrderItemRepository orderItemRepository;
+
+    private final ItemRepository itemRepository;
+
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
+                        ItemRepository itemRepository) {
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.itemRepository = itemRepository;
     }
 
-    @Transactional(readOnly = true)
-    public List<OrderDto> getAll() {
-        List<OrderModel> modelList = repository.findAll();
-
-        return modelList.stream()
-                .map(x -> convertToDto(x))
-                .toList();
+    public Flux<OrderDto> getAll() {
+        return orderRepository.findAll()
+                .flatMap(this::convertToDto);
     }
 
-    @Transactional(readOnly = true)
-    public OrderDto getById(long id) {
-        OrderModel order = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        return convertToDto(order);
+    public Mono<OrderDto> getById(long id) {
+        return orderRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
+                .flatMap(this::convertToDto);
     }
 
-
-    private OrderDto convertToDto(OrderModel x) {
-        return new OrderDto(
-                x.getId(),
-                x.getOrderItems().stream()
-                        .map(y -> y.getItem())
-                        .map(y -> new ItemDto(
-                                y.getId(),
-                                y.getTitle(),
-                                y.getDescription(),
-                                y.getImgPath(),
-                                y.getPrice(),
-                                repository.getItemCountInOrder(y.getId(), x.getId()).orElse(0)
+    private Mono<OrderDto> convertToDto(OrderModel order) {
+        return orderItemRepository.findByOrderId(order.getId())
+                .flatMap(orderItem -> itemRepository.findById(orderItem.getItemId())
+                        .map(item -> new ItemDto(
+                                item.getId(),
+                                item.getTitle(),
+                                item.getDescription(),
+                                item.getImgPath(),
+                                item.getPrice(),
+                                orderItem.getCount()
                         ))
-                        .toList(),
-                x.getTotalSum()
-                );
+                )
+                .collectList()
+                .map(items -> new OrderDto(order.getId(), items, order.getTotalSum()));
     }
 
 }

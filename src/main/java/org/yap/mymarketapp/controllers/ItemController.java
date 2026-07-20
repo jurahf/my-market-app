@@ -1,12 +1,12 @@
 package org.yap.mymarketapp.controllers;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
+import reactor.core.publisher.Mono;
 
 
 @Controller
@@ -23,72 +23,75 @@ public class ItemController {
 
     /// Получение списка товаров, список списков по три штуки
     @GetMapping({"/", "/items"})
-    public ModelAndView searchItems(@RequestParam(required = false) String search,
-                                           @RequestParam(required = false, defaultValue = "NO") SortFieldEnum sort,
-                                           @RequestParam(required = false, defaultValue = "0") int pageNumber,
-                                           @RequestParam(required = false, defaultValue = "5") int pageSize) {
+    public Mono<String> searchItems(@RequestParam(required = false) String search,
+                                    @RequestParam(required = false, defaultValue = "NO") SortFieldEnum sort,
+                                    @RequestParam(required = false, defaultValue = "0") int pageNumber,
+                                    @RequestParam(required = false, defaultValue = "5") int pageSize,
+                                    Model model) {
 
-        var response = service.getAll(new SearchRequest(
-                search,
-                sort,
-                pageNumber,
-                pageSize));
-
-        ModelAndView modelAndView = new ModelAndView("items");
-
-        modelAndView.addObject("items", response.items());
-        modelAndView.addObject("search", response.search());
-        modelAndView.addObject("sort", response.sort().toString());
-        modelAndView.addObject("paging", response.paging());
-
-        return modelAndView;
+        return service.getAll(new SearchRequest(
+                        search,
+                        sort,
+                        pageNumber,
+                        pageSize))
+                .flatMap(response -> {
+                    model.addAttribute("items", response.items());
+                    model.addAttribute("search", response.search());
+                    model.addAttribute("sort", response.sort().toString());
+                    model.addAttribute("paging", response.paging());
+                    return Mono.just("items");
+                });
     }
 
     /// Увеличение или уменьшение количества товара в корзине со страницы товаров в корзине
     @PostMapping("/items")
-    public String itemsToCart(@RequestParam(required = true) long id,
-                              @RequestParam(required = false) String search,
-                              @RequestParam(required = false) SortFieldEnum sort,
-                              @RequestParam(required = false) Integer pageNumber,
-                              @RequestParam(required = false) Integer pageSize,
-                              @RequestParam(required = true) CartActionEnum action,
-                              RedirectAttributes redirectAttributes) {
-        cartService.toCart(id, action);
+    public Mono<String> itemsToCart(@RequestParam(required = true) long id,
+                                    @RequestParam(required = false) String search,
+                                    @RequestParam(required = false) SortFieldEnum sort,
+                                    @RequestParam(required = false) Integer pageNumber,
+                                    @RequestParam(required = false) Integer pageSize,
+                                    @RequestParam(required = true) CartActionEnum action) {
 
-        if (search != null) {
-            redirectAttributes.addAttribute("search", search);
-        }
-        if (sort != null) {
-            redirectAttributes.addAttribute("sort", sort);
-        }
-        if (pageNumber != null) {
-            redirectAttributes.addAttribute("pageNumber", pageNumber);
-        }
-        if (pageSize != null) {
-            redirectAttributes.addAttribute("pageSize", pageSize);
-        }
+        return cartService.toCart(id, action)
+                .then(Mono.fromSupplier(() -> {
+                    StringBuilder url = new StringBuilder("redirect:/items");
+                    String separator = "?";
 
-        return String.format("redirect:/items");
+                    if (search != null) {
+                        url.append(separator).append("search=").append(search);
+                        separator = "&";
+                    }
+                    if (sort != null) {
+                        url.append(separator).append("sort=").append(sort);
+                        separator = "&";
+                    }
+                    if (pageNumber != null) {
+                        url.append(separator).append("pageNumber=").append(pageNumber);
+                        separator = "&";
+                    }
+                    if (pageSize != null) {
+                        url.append(separator).append("pageSize=").append(pageSize);
+                    }
+
+                    return url.toString();
+                }));
     }
 
     /// Уменьшение/увеличение количества товара в корзине со страницы товара в корзине
     @PostMapping("items/{id}")
-    public String itemsToCart(@PathVariable long id, @RequestParam CartActionEnum action) {
-        cartService.toCart(id, action);
-
-        return String.format("redirect:/items/%d", id);
+    public Mono<String> itemsToCart(@PathVariable long id, @RequestParam CartActionEnum action) {
+        return cartService.toCart(id, action)
+                .thenReturn(String.format("redirect:/items/%d", id));
     }
 
     /// Получение страницы с товаром
     @GetMapping("items/{id}")
-    public ModelAndView getItem(@PathVariable long id) {
-        ItemDto item = service.getById(id);
-
-        ModelAndView modelAndView = new ModelAndView("item");
-
-        modelAndView.addObject("item", item);
-
-        return modelAndView;
+    public Mono<String> getItem(@PathVariable long id, Model model) {
+        return service.getById(id)
+                .flatMap(item -> {
+                    model.addAttribute("item", item);
+                    return Mono.just("item");
+                });
     }
 
 }

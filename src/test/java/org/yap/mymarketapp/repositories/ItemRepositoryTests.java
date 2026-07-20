@@ -3,16 +3,14 @@ package org.yap.mymarketapp.repositories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.yap.mymarketapp.model.ItemModel;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@DataJpaTest
+@SpringBootTest
 class ItemRepositoryTests {
 
     @Autowired
@@ -24,106 +22,72 @@ class ItemRepositoryTests {
 
     @BeforeEach
     void setUp() {
+        itemRepository.deleteAll().block();
+
         item1 = new ItemModel();
         item1.setTitle("Java Programming");
         item1.setDescription("Learn Java from scratch");
         item1.setPrice(50L);
-        itemRepository.save(item1);
+        itemRepository.save(item1).block();
 
         item2 = new ItemModel();
         item2.setTitle("Spring Boot Guide");
         item2.setDescription("Spring Boot for beginners");
         item2.setPrice(75L);
-        itemRepository.save(item2);
+        itemRepository.save(item2).block();
 
         item3 = new ItemModel();
         item3.setTitle("Python Basics");
         item3.setDescription("Python programming language");
         item3.setPrice(40L);
-        itemRepository.save(item3);
+        itemRepository.save(item3).block();
     }
 
     @Test
-    void findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase_ShouldFindByTitle() {
-        // Given
-        Pageable pageable = PageRequest.of(0, 10);
-        String keyword = "java";
-
-        // When
-        Page<ItemModel> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                keyword, keyword, pageable
-        );
-
-        // Then
-        assertThat(result).isNotEmpty();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getTitle()).containsIgnoringCase("java");
+    void search_ShouldFindByTitle() {
+        itemRepository.search("java")
+                .as(StepVerifier::create)
+                .assertNext(item -> assertThat(item.getTitle()).containsIgnoringCase("java"))
+                .verifyComplete();
     }
 
     @Test
-    void findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase_ShouldFindByDescription() {
-        // Given
-        Pageable pageable = PageRequest.of(0, 10);
-        String keyword = "spring";
-
-        // When
-        Page<ItemModel> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                keyword, keyword, pageable
-        );
-
-        // Then
-        assertThat(result).isNotEmpty();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getDescription()).containsIgnoringCase("spring");
+    void search_ShouldFindByDescription() {
+        itemRepository.search("spring")
+                .as(StepVerifier::create)
+                .assertNext(item -> assertThat(item.getDescription()).containsIgnoringCase("spring"))
+                .verifyComplete();
     }
 
     @Test
-    void findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase_ShouldFindMultipleItems() {
-        // Given
-        Pageable pageable = PageRequest.of(0, 10);
-        String keyword = "programming";
-
-        // When
-        Page<ItemModel> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                keyword, keyword, pageable
-        );
-
-        // Then
-        assertThat(result).isNotEmpty();
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getContent())
-                .extracting(ItemModel::getDescription)
-                .anyMatch(desc -> desc.contains("programming"));
+    void search_ShouldFindMultipleItems() {
+        itemRepository.search("programming")
+                .collectList()
+                .as(StepVerifier::create)
+                .assertNext(items -> assertThat(items).hasSize(2))
+                .verifyComplete();
     }
 
     @Test
-    void findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase_ShouldReturnEmpty_WhenNoMatch() {
-        // Given
-        Pageable pageable = PageRequest.of(0, 10);
-        String keyword = "nonexistent";
-
-        // When
-        Page<ItemModel> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                keyword, keyword, pageable
-        );
-
-        // Then
-        assertThat(result).isEmpty();
+    void search_ShouldReturnEmpty_WhenNoMatch() {
+        itemRepository.search("nonexistent")
+                .as(StepVerifier::create)
+                .verifyComplete();
     }
 
     @Test
-    void findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase_ShouldSupportPagination() {
-        // Given
-        Pageable pageable = PageRequest.of(0, 1);
+    void countByKeyword_ShouldReturnCorrectCount() {
+        itemRepository.countByKeyword("programming")
+                .as(StepVerifier::create)
+                .assertNext(count -> assertThat(count).isEqualTo(2))
+                .verifyComplete();
+    }
 
-        // When
-        Page<ItemModel> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                "programming", "programming", pageable
-        );
-
-        // Then
-        assertThat(result).isNotEmpty();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getTotalElements()).isGreaterThan(1);
+    @Test
+    void count_ShouldReturnTotalItems() {
+        itemRepository.count()
+                .as(StepVerifier::create)
+                .assertNext(count -> assertThat(count).isEqualTo(3))
+                .verifyComplete();
     }
 }

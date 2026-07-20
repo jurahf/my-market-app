@@ -3,6 +3,7 @@ package org.yap.mymarketapp.controllers;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.yap.mymarketapp.services.CheckoutService;
+import reactor.core.publisher.Mono;
 
 
 @Controller
@@ -15,10 +16,9 @@ public class CheckoutController {
     }
 
     @PostMapping("/buy")
-    public String buy() {
-        long id = service.createOrder();
-
-        return String.format("redirect:/orders/%d?newOrder=true", id);
+    public Mono<String> buy() {
+        return service.createOrder()
+                .map(id -> String.format("redirect:/orders/%d?newOrder=true", id));
     }
 
 }

@@ -1,30 +1,26 @@
 package org.yap.mymarketapp.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-/// Товары в корзине. Корзина у нас только одна, поэтому делаем просто 1 к 1
-@Entity
-@Table(name = "cart")
+@Table("cart")
 public class CartModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private long id;
 
-    @Column(name = "count", nullable = false)
+    @Column("count")
     private int count;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "item_id", referencedColumnName = "id")
-    private ItemModel item;
+    @Column("item_id")
+    private long itemId;
 
     public CartModel() {
-
     }
 
-    public CartModel(ItemModel item, int count) {
-        this.item = item;
+    public CartModel(long itemId, int count) {
+        this.itemId = itemId;
         this.count = count;
     }
 
@@ -36,12 +32,12 @@ public class CartModel {
         this.id = id;
     }
 
-    public ItemModel getItem() {
-        return item;
+    public long getItemId() {
+        return itemId;
     }
 
-    public void setItem(ItemModel item) {
-        this.item = item;
+    public void setItemId(long itemId) {
+        this.itemId = itemId;
     }
 
     public int getCount() {
