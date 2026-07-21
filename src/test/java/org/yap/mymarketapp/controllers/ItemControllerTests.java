@@ -3,9 +3,12 @@ package org.yap.mymarketapp.controllers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.yap.mymarketapp.config.ItemRouteConfig;
 import org.yap.mymarketapp.dtos.*;
+import org.yap.mymarketapp.handlers.ItemHandler;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 import reactor.core.publisher.Mono;
@@ -16,7 +19,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@WebFluxTest(ItemController.class)
+@WebFluxTest
+@Import({ItemHandler.class, ItemRouteConfig.class})
 class ItemControllerTests {
 
     @Autowired

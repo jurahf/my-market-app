@@ -3,12 +3,15 @@ package org.yap.mymarketapp.controllers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.server.ResponseStatusException;
+import org.yap.mymarketapp.config.OrderRouteConfig;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
+import org.yap.mymarketapp.handlers.OrderHandler;
 import org.yap.mymarketapp.services.OrderService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,7 +20,8 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 
-@WebFluxTest(OrderController.class)
+@WebFluxTest
+@Import({OrderHandler.class, OrderRouteConfig.class})
 class OrderControllerTests {
 
     @Autowired

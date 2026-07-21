@@ -3,15 +3,19 @@ package org.yap.mymarketapp.controllers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.yap.mymarketapp.config.CheckoutRouteConfig;
+import org.yap.mymarketapp.handlers.CheckoutHandler;
 import org.yap.mymarketapp.services.CheckoutService;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@WebFluxTest(CheckoutController.class)
+@WebFluxTest
+@Import({CheckoutHandler.class, CheckoutRouteConfig.class})
 class CheckoutControllerTests {
 
     @Autowired

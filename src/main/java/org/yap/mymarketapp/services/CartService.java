@@ -39,11 +39,11 @@ public class CartService {
                             if (cart.getCount() <= 0) {
                                 return repository.deleteById(cart.getId()).then();
                             }
-                            return repository.save(cart).then();
+                            return repository.save(cart);
                         })
                         .switchIfEmpty(Mono.defer(() -> {
                             if (action == CartActionEnum.PLUS) {
-                                return repository.save(new CartModel(item.getId(), 1)).then();
+                                return repository.save(new CartModel(itemId, 1)).then();
                             }
                             return Mono.empty();
                         }))
