@@ -4,17 +4,15 @@ package org.yap.mymarketapp.repositories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@SpringBootTest
 class OrderRepositoryTests {
 
     @Autowired
@@ -23,58 +21,51 @@ class OrderRepositoryTests {
     @Autowired
     private ItemRepository itemRepository;
 
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
     private ItemModel testItem;
     private OrderModel testOrder;
-    private OrderItem testOrderItem;
 
     @BeforeEach
     void setUp() {
-        // Создаем тестовый товар
+        orderItemRepository.deleteAll().block();
+        orderRepository.deleteAll().block();
+        itemRepository.deleteAll().block();
+
         testItem = new ItemModel();
         testItem.setTitle("Test Item");
         testItem.setDescription("Test Description");
         testItem.setPrice(100L);
-        testItem = itemRepository.save(testItem);
+        testItem = itemRepository.save(testItem).block();
 
         testOrder = new OrderModel();
-
-        // Создаем тестовый элемент заказа
-        testOrderItem = new OrderItem();
-        testOrderItem.setOrder(testOrder);
-        testOrderItem.setItem(testItem);
-        testOrderItem.setCount(3);
-
-        // Создаем тестовый заказ
         testOrder.setTotalSum(100L);
-        testOrder.setOrderItems(List.of(testOrderItem));
-        testOrder = orderRepository.save(testOrder);
+        testOrder = orderRepository.save(testOrder).block();
+
+        OrderItem testOrderItem = new OrderItem(testOrder.getId(), testItem.getId(), 3);
+        orderItemRepository.save(testOrderItem).block();
     }
 
     @Test
     void getItemCountInOrder_ShouldReturnCount_WhenItemExistsInOrder() {
-        // When
-        Optional<Integer> count = orderRepository.getItemCountInOrder(testItem.getId(), testOrder.getId());
-
-        // Then
-        assertThat(count).isPresent();
-        assertThat(count.get()).isEqualTo(3);
+        orderItemRepository.getItemCountInOrder(testOrder.getId(), testItem.getId())
+                .as(StepVerifier::create)
+                .assertNext(count -> assertThat(count).isEqualTo(3))
+                .verifyComplete();
     }
 
     @Test
     void getItemCountInOrder_ShouldReturnEmpty_WhenItemNotInOrder() {
-        // When
-        Optional<Integer> count = orderRepository.getItemCountInOrder(999L, testOrder.getId());
-
-        // Then
-        assertThat(count).isEmpty();
+        orderItemRepository.getItemCountInOrder(testOrder.getId(), 999L)
+                .as(StepVerifier::create)
+                .verifyComplete();
     }
 
     @Test
     void getItemCountInOrder_ShouldReturnEmpty_WhenOrderDoesNotExist() {
-        // When
-        Optional<Integer> count = orderRepository.getItemCountInOrder(testItem.getId(), 999L);
-
-        // Then
-        assertThat(count).isEmpty();
+        orderItemRepository.getItemCountInOrder(999L, testItem.getId())
+                .as(StepVerifier::create)
+                .verifyComplete();
     }
 }

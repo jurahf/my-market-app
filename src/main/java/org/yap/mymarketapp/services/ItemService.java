@@ -1,20 +1,18 @@
 package org.yap.mymarketapp.services;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.model.ItemModel;
+import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,64 +21,83 @@ public class ItemService {
 
     private final ItemRepository repository;
 
-    public ItemService(ItemRepository repository) {
+    private final CartRepository cartRepository;
+
+    public ItemService(ItemRepository repository, CartRepository cartRepository) {
         this.repository = repository;
+        this.cartRepository = cartRepository;
     }
 
-    @Transactional(readOnly = true)
-    public ItemDto getById(long id) {
-        Optional<ItemModel> itemOpt = repository.findById(id);
-
-        if (itemOpt.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);;
-
-        return convertFromDB(itemOpt.get());
+    public Mono<ItemDto> getById(long id) {
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
+                .flatMap(item -> cartRepository.findByItemId(item.getId())
+                        .map(cart -> convertFromDB(item, cart.getCount()))
+                        .defaultIfEmpty(convertFromDB(item, 0))
+                );
     }
 
-    @Transactional(readOnly = true)
-    public SearchResponse getAll(SearchRequest request) {
+    public Mono<SearchResponse> getAll(SearchRequest request) {
+        Comparator<ItemModel> comparator = getComparator(request.sort());
 
-        Pageable pageable = PageRequest.of(
-                request.pageNumber() < 1 ? 0 : request.pageNumber() - 1,
-                request.pageSize() < 0 ? 5 : request.pageSize(),
-                getSort(request.sort()));
+        Mono<List<ItemModel>> itemsMono;
+        Mono<Long> countMono;
 
-        Page<ItemModel> page;
         if (request.search() != null && !request.search().isEmpty()) {
-             page = repository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                    request.search(), request.search(), pageable
-            );
+            itemsMono = repository.search(request.search())
+                    .sort(comparator)
+                    .collectList();
+            countMono = repository.countByKeyword(request.search());
+        } else {
+            itemsMono = repository.findAll()
+                    .sort(comparator)
+                    .collectList();
+            countMono = repository.count();
         }
-        else {
-            page = repository.findAll(pageable);
-        }
 
-        List<ItemDto> dtos = page.getContent().stream()
-                .map(x -> convertFromDB(x)
-                )
-                .toList();
+        return Mono.zip(itemsMono, countMono)
+                .flatMap(tuple -> {
+                    List<ItemModel> allItems = tuple.getT1();
+                    long totalElements = tuple.getT2();
 
-        var items = splitIntoChunks(dtos, 3);
+                    int pageNumber = request.pageNumber() < 1 ? 1 : request.pageNumber();
+                    int pageSize = request.pageSize() <= 0 ? 5 : request.pageSize();
 
-        return new SearchResponse(
-                request.search(),
-                request.sort(),
-                new PagingDto(
-                        request.pageSize(),
-                        request.pageNumber(),
-                        page.hasPrevious(),
-                        page.hasNext()),
-                items);
+                    int start = (pageNumber - 1) * pageSize;
+                    int end = Math.min(start + pageSize, allItems.size());
+
+                    List<ItemModel> pageItems = start < allItems.size()
+                            ? allItems.subList(start, end)
+                            : List.of();
+
+                    return Flux.fromIterable(pageItems)
+                            .flatMap(item -> cartRepository.findByItemId(item.getId())
+                                    .map(cart -> convertFromDB(item, cart.getCount()))
+                                    .defaultIfEmpty(convertFromDB(item, 0))
+                            )
+                            .collectList()
+                            .map(dtos -> {
+                                var items = splitIntoChunks(dtos, 3);
+                                boolean hasPrevious = pageNumber > 1;
+                                boolean hasNext = end < totalElements;
+
+                                return new SearchResponse(
+                                        request.search(),
+                                        request.sort(),
+                                        new PagingDto(pageSize, pageNumber, hasPrevious, hasNext),
+                                        items);
+                            });
+                });
     }
 
-    private ItemDto convertFromDB(ItemModel x) {
+    private ItemDto convertFromDB(ItemModel x, int cartCount) {
         return new ItemDto(
                 x.getId(),
                 x.getTitle(),
                 x.getDescription(),
                 x.getImgPath(),
                 x.getPrice(),
-                x.getCart().map(c -> c.getCount()).orElse(0)
+                cartCount
         );
     }
 
@@ -98,20 +115,18 @@ public class ItemService {
                     return chunk;
                 })
                 .collect(Collectors.toList());
-
     }
 
-    private Sort getSort(SortFieldEnum sort) {
+    private Comparator<ItemModel> getComparator(SortFieldEnum sort) {
         if (sort == null || sort == SortFieldEnum.NO) {
-            return Sort.unsorted();
+            return (a, b) -> 0;
         }
 
         return switch (sort) {
-            case ALPHA -> Sort.by("title").ascending();
-            case PRICE -> Sort.by("price").ascending();
-            default -> Sort.unsorted();
+            case ALPHA -> Comparator.comparing(ItemModel::getTitle);
+            case PRICE -> Comparator.comparingLong(ItemModel::getPrice);
+            default -> (a, b) -> 0;
         };
     }
-
 
 }

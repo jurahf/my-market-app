@@ -1,40 +1,26 @@
 package org.yap.mymarketapp.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Optional;
-
-@Entity
-@Table(name = "item")
+@Table("item")
 public class ItemModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private long id;
 
-    @Column(name = "title", nullable = false, length = 255)
+    @Column("title")
     private String title;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column("description")
     private String description;
 
-    @Column(name = "img_path", length = 500)
+    @Column("img_path")
     private String imgPath;
 
-    @Column(name = "price", nullable = false)
+    @Column("price")
     private long price;
-
-    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)
-    private CartModel cart;
-
-    public Optional<CartModel> getCart() {
-        return Optional.ofNullable(cart);
-    }
-
-    public void setCart(CartModel cart) {
-        this.cart = cart;
-    }
 
     public long getId() {
         return id;

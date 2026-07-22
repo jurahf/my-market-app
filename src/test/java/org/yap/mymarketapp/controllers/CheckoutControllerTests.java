@@ -2,56 +2,62 @@ package org.yap.mymarketapp.controllers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.yap.mymarketapp.config.CheckoutRouteConfig;
+import org.yap.mymarketapp.handlers.CheckoutHandler;
 import org.yap.mymarketapp.services.CheckoutService;
+import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CheckoutController.class)
+@WebFluxTest
+@Import({CheckoutHandler.class, CheckoutRouteConfig.class})
 class CheckoutControllerTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @MockitoBean
     private CheckoutService checkoutService;
 
     @Test
-    void buy_shouldCreateOrderAndRedirectToOrderPage() throws Exception {
+    void buy_shouldCreateOrderAndRedirectToOrderPage() {
         long orderId = 123L;
-        when(checkoutService.createOrder()).thenReturn(orderId);
+        when(checkoutService.createOrder()).thenReturn(Mono.just(orderId));
 
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/123?newOrder=true"));
+        webTestClient.post().uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/orders/123?newOrder=true");
 
         verify(checkoutService).createOrder();
     }
 
     @Test
-    void buy_whenOrderCreatedWithDifferentId_shouldRedirectWithCorrectId() throws Exception {
+    void buy_whenOrderCreatedWithDifferentId_shouldRedirectWithCorrectId() {
         long orderId = 456L;
-        when(checkoutService.createOrder()).thenReturn(orderId);
+        when(checkoutService.createOrder()).thenReturn(Mono.just(orderId));
 
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/456?newOrder=true"));
+        webTestClient.post().uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/orders/456?newOrder=true");
 
         verify(checkoutService).createOrder();
     }
 
     @Test
-    void buy_shouldReturnRedirectStatus() throws Exception {
-        when(checkoutService.createOrder()).thenReturn(1L);
+    void buy_shouldReturnRedirectStatus() {
+        when(checkoutService.createOrder()).thenReturn(Mono.just(1L));
 
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().isFound()) // 302
-                .andExpect(redirectedUrlPattern("/orders/*?newOrder=true"));
+        webTestClient.post().uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/orders/\\d+\\?newOrder=true");
 
         verify(checkoutService).createOrder();
     }

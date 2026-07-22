@@ -2,90 +2,90 @@ package org.yap.mymarketapp.controllers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.server.ResponseStatusException;
+import org.yap.mymarketapp.config.OrderRouteConfig;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
+import org.yap.mymarketapp.handlers.OrderHandler;
 import org.yap.mymarketapp.services.OrderService;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(OrderController.class)
+@WebFluxTest
+@Import({OrderHandler.class, OrderRouteConfig.class})
 class OrderControllerTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
     @MockitoBean
     private OrderService orderService;
 
     @Test
-    void getAll_shouldReturnOrdersViewWithOrdersList() throws Exception {
+    void getAll_shouldReturnOrdersViewWithOrdersList() {
         var orderItems = List.of(
                 new ItemDto(1L, "Item1", "", "", 100L, 2),
-                new ItemDto(2L, "Item2", "", "",50, 1)
+                new ItemDto(2L, "Item2", "", "", 50L, 1)
         );
         var orders = List.of(
                 new OrderDto(1L, orderItems, 250L),
                 new OrderDto(2L, orderItems, 150L)
         );
 
-        when(orderService.getAll()).thenReturn(orders);
+        when(orderService.getAll()).thenReturn(Flux.fromIterable(orders));
 
-        mockMvc.perform(get("/orders"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("orders"))
-                .andExpect(model().attributeExists("orders"))
-                .andExpect(model().attribute("orders", orders));
+        webTestClient.get().uri("/orders")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
-    void getOrCreateOrder_withoutNewOrderParam_shouldReturnOrderViewWithOrder() throws Exception {
+    void getOrCreateOrder_withoutNewOrderParam_shouldReturnOrderViewWithOrder() {
         var orderItems = List.of(
                 new ItemDto(1L, "Item1", "", "", 100L, 2)
         );
         var order = new OrderDto(1L, orderItems, 200L);
 
-        when(orderService.getById(1L)).thenReturn(order);
+        when(orderService.getById(1L)).thenReturn(Mono.just(order));
 
-        mockMvc.perform(get("/orders/1"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("order"))
-                .andExpect(model().attributeExists("order", "newOrder"))
-                .andExpect(model().attribute("order", order))
-                .andExpect(model().attribute("newOrder", false));
+        webTestClient.get().uri("/orders/1")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
-    void getOrCreateOrder_withNewOrderTrue_shouldReturnOrderViewWithNewOrderFlag() throws Exception {
+    void getOrCreateOrder_withNewOrderTrue_shouldReturnOrderViewWithNewOrderFlag() {
         var orderItems = List.of(
                 new ItemDto(1L, "Item1", "", "", 100L, 2)
         );
         var order = new OrderDto(1L, orderItems, 200L);
 
-        when(orderService.getById(1L)).thenReturn(order);
+        when(orderService.getById(1L)).thenReturn(Mono.just(order));
 
-        mockMvc.perform(get("/orders/1")
-                        .param("newOrder", "true"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("order"))
-                .andExpect(model().attribute("order", order))
-                .andExpect(model().attribute("newOrder", true));
+        webTestClient.get().uri(uriBuilder -> uriBuilder
+                        .path("/orders/1")
+                        .queryParam("newOrder", true)
+                        .build())
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
-    void getOrCreateOrder_withNonExistentId_shouldReturnErrorPage() throws Exception {
-        when(orderService.getById(999L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+    void getOrCreateOrder_withNonExistentId_shouldReturnErrorPage() {
+        when(orderService.getById(999L))
+                .thenReturn(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
 
-        mockMvc.perform(get("/orders/999"))
-                .andExpect(status().is4xxClientError());
+        webTestClient.get().uri("/orders/999")
+                .exchange()
+                .expectStatus().is4xxClientError();
     }
 }

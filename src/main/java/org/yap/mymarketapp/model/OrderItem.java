@@ -1,32 +1,30 @@
 package org.yap.mymarketapp.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-@Entity
-@Table(name = "order_items")
+@Table("order_items")
 public class OrderItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", referencedColumnName = "id")
-    private OrderModel order;
+    @Column("order_id")
+    private long orderId;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id", referencedColumnName = "id")
-    private ItemModel item;
+    @Column("item_id")
+    private long itemId;
 
-    @Column(nullable = false)
+    @Column("count")
     private int count;
 
     public OrderItem() {
     }
 
-    public OrderItem(OrderModel order, ItemModel item, int count) {
-        this.order = order;
-        this.item = item;
+    public OrderItem(long orderId, long itemId, int count) {
+        this.orderId = orderId;
+        this.itemId = itemId;
         this.count = count;
     }
 
@@ -38,20 +36,20 @@ public class OrderItem {
         this.id = id;
     }
 
-    public OrderModel getOrder() {
-        return order;
+    public long getOrderId() {
+        return orderId;
     }
 
-    public void setOrder(OrderModel order) {
-        this.order = order;
+    public void setOrderId(long orderId) {
+        this.orderId = orderId;
     }
 
-    public ItemModel getItem() {
-        return item;
+    public long getItemId() {
+        return itemId;
     }
 
-    public void setItem(ItemModel item) {
-        this.item = item;
+    public void setItemId(long itemId) {
+        this.itemId = itemId;
     }
 
     public int getCount() {
@@ -61,5 +59,4 @@ public class OrderItem {
     public void setCount(int count) {
         this.count = count;
     }
-
 }

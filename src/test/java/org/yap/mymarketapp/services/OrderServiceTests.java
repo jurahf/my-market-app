@@ -10,15 +10,18 @@ import org.yap.mymarketapp.dtos.OrderDto;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
-import org.yap.mymarketapp.repositories.CartRepository;
+import org.yap.mymarketapp.repositories.ItemRepository;
+import org.yap.mymarketapp.repositories.OrderItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,7 +31,10 @@ class OrderServiceTests {
     private OrderRepository orderRepository;
 
     @Mock
-    private CartRepository cartRepository;
+    private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private ItemRepository itemRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -55,60 +61,67 @@ class OrderServiceTests {
 
         orderModel = new OrderModel();
         orderModel.setId(1L);
-        orderModel.setOrderItems(List.of(new OrderItem(orderModel, item1, 1), new OrderItem(orderModel, item2, 1)));
         orderModel.setTotalSum(400L);
     }
 
     @Test
     void getAll_ShouldReturnListOfOrderDtos() {
-        // Arrange
-        when(orderRepository.findAll()).thenReturn(List.of(orderModel));
-        when(orderRepository.getItemCountInOrder(anyLong(), anyLong()))
-                .thenReturn(Optional.of(1));
+        OrderItem oi1 = new OrderItem(1L, 1L, 1);
+        OrderItem oi2 = new OrderItem(1L, 2L, 1);
 
-        // Act
-        List<OrderDto> result = orderService.getAll();
+        when(orderRepository.findAll()).thenReturn(Flux.just(orderModel));
+        when(orderItemRepository.findByOrderId(1L)).thenReturn(Flux.just(oi1, oi2));
+        when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
+        when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
 
-        // Assert
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(1L);
-        assertThat(result.get(0).items()).hasSize(2);
-        assertThat(result.get(0).totalSum()).isEqualTo(400L);
+        orderService.getAll()
+                .collectList()
+                .as(StepVerifier::create)
+                .assertNext(result -> {
+                    assertThat(result).hasSize(1);
+                    assertThat(result.get(0).id()).isEqualTo(1L);
+                    assertThat(result.get(0).items()).hasSize(2);
+                    assertThat(result.get(0).totalSum()).isEqualTo(400L);
+                })
+                .verifyComplete();
 
         verify(orderRepository).findAll();
-        verify(orderRepository, times(2)).getItemCountInOrder(anyLong(), anyLong());
+        verify(orderItemRepository, times(1)).findByOrderId(anyLong());
     }
 
     @Test
     void getById_ShouldReturnOrderDto_WhenOrderExists() {
-        // Arrange
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(orderModel));
-        when(orderRepository.getItemCountInOrder(anyLong(), anyLong()))
-                .thenReturn(Optional.of(1));
+        OrderItem oi1 = new OrderItem(1L, 1L, 1);
+        OrderItem oi2 = new OrderItem(1L, 2L, 1);
 
-        // Act
-        OrderDto result = orderService.getById(1L);
+        when(orderRepository.findById(1L)).thenReturn(Mono.just(orderModel));
+        when(orderItemRepository.findByOrderId(1L)).thenReturn(Flux.just(oi1, oi2));
+        when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
+        when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
 
-        // Assert
-        assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(1L);
-        assertThat(result.items()).hasSize(2);
-        assertThat(result.totalSum()).isEqualTo(400L);
+        orderService.getById(1L)
+                .as(StepVerifier::create)
+                .assertNext(result -> {
+                    assertThat(result).isNotNull();
+                    assertThat(result.id()).isEqualTo(1L);
+                    assertThat(result.items()).hasSize(2);
+                    assertThat(result.totalSum()).isEqualTo(400L);
+                })
+                .verifyComplete();
 
         verify(orderRepository).findById(1L);
-        verify(orderRepository, times(2)).getItemCountInOrder(anyLong(), anyLong());
     }
 
     @Test
     void getById_ShouldThrowException_WhenOrderNotFound() {
-        // Arrange
-        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+        when(orderRepository.findById(999L)).thenReturn(Mono.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> orderService.getById(999L))
-                .isInstanceOf(RuntimeException.class);
+        orderService.getById(999L)
+                .as(StepVerifier::create)
+                .expectError(RuntimeException.class)
+                .verify();
 
         verify(orderRepository).findById(999L);
-        verify(orderRepository, never()).getItemCountInOrder(anyLong(), anyLong());
+        verify(orderItemRepository, never()).findByOrderId(anyLong());
     }
 }

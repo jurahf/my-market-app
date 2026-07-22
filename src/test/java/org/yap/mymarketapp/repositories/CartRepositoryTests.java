@@ -3,16 +3,14 @@ package org.yap.mymarketapp.repositories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.yap.mymarketapp.model.CartModel;
 import org.yap.mymarketapp.model.ItemModel;
-
-
-import java.util.Optional;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@SpringBootTest
 class CartRepositoryTests {
 
     @Autowired
@@ -26,37 +24,36 @@ class CartRepositoryTests {
 
     @BeforeEach
     void setUp() {
-        // Создаем тестовый товар
+        cartRepository.deleteAll().block();
+        itemRepository.deleteAll().block();
+
         testItem = new ItemModel();
         testItem.setTitle("Test Item");
         testItem.setDescription("Test Description");
         testItem.setPrice(100L);
-        testItem = itemRepository.save(testItem);
+        testItem = itemRepository.save(testItem).block();
 
-        // Создаем тестовую корзину
         testCart = new CartModel();
-        testCart.setItem(testItem);
+        testCart.setItemId(testItem.getId());
         testCart.setCount(2);
-        testCart = cartRepository.save(testCart);
+        testCart = cartRepository.save(testCart).block();
     }
 
     @Test
     void findByItemId_ShouldReturnCart_WhenItemExists() {
-        // When
-        Optional<CartModel> foundCart = cartRepository.findByItemId(testItem.getId());
-
-        // Then
-        assertThat(foundCart).isPresent();
-        assertThat(foundCart.get().getItem().getId()).isEqualTo(testItem.getId());
-        assertThat(foundCart.get().getCount()).isEqualTo(2);
+        cartRepository.findByItemId(testItem.getId())
+                .as(StepVerifier::create)
+                .assertNext(cart -> {
+                    assertThat(cart.getItemId()).isEqualTo(testItem.getId());
+                    assertThat(cart.getCount()).isEqualTo(2);
+                })
+                .verifyComplete();
     }
 
     @Test
     void findByItemId_ShouldReturnEmpty_WhenItemDoesNotExist() {
-        // When
-        Optional<CartModel> foundCart = cartRepository.findByItemId(999L);
-
-        // Then
-        assertThat(foundCart).isEmpty();
+        cartRepository.findByItemId(999L)
+                .as(StepVerifier::create)
+                .verifyComplete();
     }
 }
