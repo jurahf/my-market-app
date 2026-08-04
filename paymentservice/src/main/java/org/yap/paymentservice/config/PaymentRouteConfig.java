@@ -15,6 +15,7 @@ public class PaymentRouteConfig {
     public RouterFunction<ServerResponse> paymentRoutes(PaymentHandler handler) {
         return route()
                 .GET("/api/balance", handler::getBalance)
+                .PUT("/api/balance", handler::decBalance)
                 .build();
     }
 }
