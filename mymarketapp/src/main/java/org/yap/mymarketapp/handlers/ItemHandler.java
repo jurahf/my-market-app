@@ -1,6 +1,7 @@
 package org.yap.mymarketapp.handlers;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -52,18 +53,18 @@ public class ItemHandler {
         return request.formData()
                 .flatMap(formData -> {
                     try {
-                        var id = Long.parseLong(formData.getFirst("id"));
-                        var search = formData.getFirst("search");
-                        var sort = formData.getFirst("sort") != null
-                                ? SortFieldEnum.valueOf(formData.getFirst("sort"))
+                        var id = Long.parseLong(firstValue(request, formData, "id"));
+                        var search = firstValue(request, formData, "search");
+                        var sort = firstValue(request, formData, "sort") != null
+                                ? SortFieldEnum.valueOf(firstValue(request, formData, "sort"))
                                 : null;
-                        var pageNumber = formData.getFirst("pageNumber") != null
-                                ? Integer.parseInt(formData.getFirst("pageNumber"))
+                        var pageNumber = firstValue(request, formData, "pageNumber") != null
+                                ? Integer.parseInt(firstValue(request, formData, "pageNumber"))
                                 : null;
-                        var pageSize = formData.getFirst("pageSize") != null
-                                ? Integer.parseInt(formData.getFirst("pageSize"))
+                        var pageSize = firstValue(request, formData, "pageSize") != null
+                                ? Integer.parseInt(firstValue(request, formData, "pageSize"))
                                 : null;
-                        var action = CartActionEnum.valueOf(formData.getFirst("action"));
+                        var action = CartActionEnum.valueOf(firstValue(request, formData, "action"));
 
                         return cartService.toCart(id, action)
                                 .then(Mono.fromSupplier(() -> {
@@ -85,11 +86,17 @@ public class ItemHandler {
         return request.formData()
                 .flatMap(formData -> {
                     var id = Long.parseLong(request.pathVariable("id"));
-                    var action =  CartActionEnum.valueOf(formData.getFirst("action"));
+                    var action =  CartActionEnum.valueOf(firstValue(request, formData, "action"));
 
                     return cartService.toCart(id, action)
                             .then(ServerResponse.seeOther(URI.create("/items/" + id)).build());
                 });
+    }
+
+    private String firstValue(ServerRequest request, MultiValueMap<String, String> formData, String name) {
+        return request.queryParam(name)
+                .or(() -> Optional.ofNullable(formData.getFirst(name)))
+                .orElse(null);
     }
 
     public Mono<ServerResponse> getItem(ServerRequest request) {

@@ -36,7 +36,7 @@ class CartControllerTests {
                 new ItemDto(1L, "Item1", "Desc", "img", 100L, 2),
                 new ItemDto(2L, "Item2", "", "", 50L, 3)
         );
-        var cartResponse = new CartResponse(items, 350L);
+        var cartResponse = new CartResponse(items, 350L, 400L);
 
         when(cartService.getItemsInCart()).thenReturn(Mono.just(cartResponse));
 
@@ -47,7 +47,7 @@ class CartControllerTests {
 
     @Test
     void getCart_whenCartIsEmpty_shouldReturnCartViewWithEmptyItemsAndZeroTotal() {
-        var cartResponse = new CartResponse(List.of(), 0L);
+        var cartResponse = new CartResponse(List.of(), 0L, 400L);
 
         when(cartService.getItemsInCart()).thenReturn(Mono.just(cartResponse));
 

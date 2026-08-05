@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class CartHandler {
@@ -30,18 +31,23 @@ public class CartHandler {
     }
 
     public Mono<ServerResponse> itemsToCart(ServerRequest request) {
-        var idParam = request.queryParam("id");
-        var actionParam = request.queryParam("action");
-        if (idParam.isEmpty() || actionParam.isEmpty()) {
-            return ServerResponse.badRequest().build();
-        }
-        try {
-            var id = Long.parseLong(idParam.get());
-            var action = CartActionEnum.valueOf(actionParam.get());
-            return service.toCart(id, action)
-                    .then(ServerResponse.seeOther(URI.create("/cart/items")).build());
-        } catch (IllegalArgumentException e) {
-            return ServerResponse.badRequest().build();
-        }
+        return request.formData()
+                .flatMap(formData -> {
+                    var idParam = request.queryParam("id")
+                            .or(() -> Optional.ofNullable(formData.getFirst("id")));
+                    var actionParam = request.queryParam("action")
+                            .or(() -> Optional.ofNullable(formData.getFirst("action")));
+                    if (idParam.isEmpty() || actionParam.isEmpty()) {
+                        return ServerResponse.badRequest().build();
+                    }
+                    try {
+                        var id = Long.parseLong(idParam.get());
+                        var action = CartActionEnum.valueOf(actionParam.get());
+                        return service.toCart(id, action)
+                                .then(ServerResponse.seeOther(URI.create("/cart/items")).build());
+                    } catch (IllegalArgumentException e) {
+                        return ServerResponse.badRequest().build();
+                    }
+                });
     }
 }
