@@ -13,6 +13,8 @@ import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Service
 public class CartService {
 
@@ -69,15 +71,16 @@ public class CartService {
                         ))
                 )
                 .collectList()
-                .map(items -> {
-
-                    long total = items.stream().mapToLong(i -> i.price() * i.count()).sum();
-
+                .flatMap(items -> {
                     var api = new BalanceApi(apiClient);
-                    var balance = api.getBalance();
-
-                    return new CartResponse(items, total, balance);
+                    return api.getBalance()
+                            .onErrorResume(x -> Mono.just(-1L))
+                            .map(balance -> {
+                                long total = items.stream().mapToLong(i -> i.price() * i.count()).sum();
+                                return new CartResponse(items, total, balance);
+                    });
                 });
     }
+
 
 }

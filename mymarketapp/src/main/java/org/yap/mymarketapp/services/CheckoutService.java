@@ -7,6 +7,7 @@ import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.openapi.ApiClient;
 import org.yap.mymarketapp.openapi.api.BalanceApi;
+import org.yap.mymarketapp.openapi.model.BalanceDecRequest;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import org.yap.mymarketapp.repositories.OrderItemRepository;
@@ -67,7 +68,10 @@ public class CheckoutService {
                         return total;
                     }).flatMap(totalSum -> {
                         newOrder.setTotalSum(totalSum);
-                        return orderRepository.save(newOrder);
+                        return api.decBalance(new BalanceDecRequest().decValue(totalSum))
+                                .filter(balance -> balance >= 0)
+                                .onErrorResume(e -> Mono.empty())
+                                .then(orderRepository.save(newOrder));
                     }).flatMap(savedOrder -> {
                         List<Mono<OrderItem>> saveMonos = new ArrayList<>();
                         for (var cart : cartList) {
