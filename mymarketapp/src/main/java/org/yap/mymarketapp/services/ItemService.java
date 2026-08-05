@@ -1,8 +1,10 @@
 package org.yap.mymarketapp.services;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.yap.mymarketapp.config.RedisCacheConfig;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
@@ -28,6 +30,7 @@ public class ItemService {
         this.cartRepository = cartRepository;
     }
 
+    @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "#id")
     public Mono<ItemDto> getById(long id) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
@@ -37,6 +40,7 @@ public class ItemService {
                 );
     }
 
+    @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "#request")
     public Mono<SearchResponse> getAll(SearchRequest request) {
         Comparator<ItemModel> comparator = getComparator(request.sort());
 

@@ -1,5 +1,8 @@
 package org.yap.mymarketapp.dtos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ItemDto {
 
     private long id;
@@ -14,7 +17,13 @@ public class ItemDto {
 
     private int count;
 
-    public ItemDto(long id, String title, String description, String imgPath, long price, int count) {
+    @JsonCreator
+    public ItemDto(@JsonProperty("id") long id,
+                   @JsonProperty("title") String title,
+                   @JsonProperty("description") String description,
+                   @JsonProperty("imgPath") String imgPath,
+                   @JsonProperty("price") long price,
+                   @JsonProperty("count") int count) {
         this.id = id;
         this.title = title;
         this.description = description;
