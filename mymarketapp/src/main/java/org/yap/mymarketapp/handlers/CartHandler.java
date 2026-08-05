@@ -24,7 +24,8 @@ public class CartHandler {
                 .flatMap(response -> ServerResponse.ok()
                         .render("cart", Map.of(
                                 "items", response.getItems(),
-                                "total", response.getTotal()
+                                "total", response.getTotal(),
+                                "balance", response.getBalance()
                         )));
     }
 

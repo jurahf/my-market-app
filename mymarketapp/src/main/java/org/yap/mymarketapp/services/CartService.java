@@ -7,6 +7,8 @@ import org.yap.mymarketapp.dtos.CartActionEnum;
 import org.yap.mymarketapp.dtos.CartResponse;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.model.CartModel;
+import org.yap.mymarketapp.openapi.ApiClient;
+import org.yap.mymarketapp.openapi.api.BalanceApi;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import reactor.core.publisher.Mono;
@@ -18,9 +20,12 @@ public class CartService {
 
     private final ItemRepository itemRepository;
 
-    public CartService(CartRepository repository, ItemRepository itemRepository) {
+    private final ApiClient apiClient;
+
+    public CartService(CartRepository repository, ItemRepository itemRepository, ApiClient apiClient) {
         this.repository = repository;
         this.itemRepository = itemRepository;
+        this.apiClient = apiClient;
     }
 
     public Mono<Void> toCart(long itemId, CartActionEnum action) {
@@ -65,8 +70,13 @@ public class CartService {
                 )
                 .collectList()
                 .map(items -> {
+
                     long total = items.stream().mapToLong(i -> i.price() * i.count()).sum();
-                    return new CartResponse(items, total);
+
+                    var api = new BalanceApi(apiClient);
+                    var balance = api.getBalance();
+
+                    return new CartResponse(items, total, balance);
                 });
     }
 

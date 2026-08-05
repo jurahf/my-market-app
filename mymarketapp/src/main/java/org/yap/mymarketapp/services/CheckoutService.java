@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.yap.mymarketapp.model.OrderItem;
 import org.yap.mymarketapp.model.OrderModel;
+import org.yap.mymarketapp.openapi.ApiClient;
+import org.yap.mymarketapp.openapi.api.BalanceApi;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import org.yap.mymarketapp.repositories.OrderItemRepository;
@@ -26,12 +28,15 @@ public class CheckoutService {
 
     private final ItemRepository itemRepository;
 
+    private final ApiClient apiClient;
+
     public CheckoutService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-                           CartRepository cartRepository, ItemRepository itemRepository) {
+                           CartRepository cartRepository, ItemRepository itemRepository, ApiClient apiClient) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.itemRepository = itemRepository;
+        this.apiClient = apiClient;
     }
 
     public Mono<Long> createOrder() {
@@ -39,6 +44,7 @@ public class CheckoutService {
                 .filter(list -> !list.isEmpty())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST)))
                 .flatMap(cartList -> {
+
                     OrderModel newOrder = new OrderModel();
                     newOrder.setTotalSum(0);
 
@@ -50,6 +56,8 @@ public class CheckoutService {
                         priceMonos.add(itemRepository.findById(cart.getItemId())
                                 .map(item -> cart.getCount() * item.getPrice()));
                     }
+
+                    var api = new BalanceApi(apiClient);
 
                     return Mono.zip(priceMonos, prices -> {
                         long total = 0;

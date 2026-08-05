@@ -8,9 +8,12 @@ public class CartResponse {
 
     private long total;
 
-    public CartResponse(List<ItemDto> items, long total) {
+    private long balance;
+
+    public CartResponse(List<ItemDto> items, long total, long balance) {
         this.items = items;
         this.total = total;
+        this.balance = balance;
     }
 
     public List<ItemDto> getItems() {
@@ -27,5 +30,13 @@ public class CartResponse {
 
     public void setTotal(long total) {
         this.total = total;
+    }
+
+    public long getBalance() {
+        return balance;
+    }
+
+    public void setBalance(long balance) {
+        this.balance = balance;
     }
 }
