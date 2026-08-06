@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  description: REST API for the payment service balance operations.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /api/balance:
+    get:
+      tags:
+        - balance
+      summary: Get current balance
+      operationId: getBalance
+      responses:
+        '200':
+          description: Current balance
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+    put:
+      tags:
+        - balance
+      summary: Decrease balance
+      operationId: decBalance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceDecRequest'
+      responses:
+        '200':
+          description: New balance after the decrease
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+components:
+  schemas:
+    BalanceDecRequest:
+      type: object
+      required:
+        - decValue
+      properties:
+        decValue:
+          type: integer
+          format: int64
+          description: Amount to decrease the balance by.

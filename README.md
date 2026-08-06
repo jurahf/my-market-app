@@ -1,25 +1,54 @@
 
 # my-market-app
 
-Задание на 5 спринт для Яндекс.Практикум
+Мультимодульный проект (задание на 5 спринт Яндекс.Практикум).
 
-  
+## Модули
 
-# Запуск в IDE
+- **mymarketapp** — существующее веб-приложение (reactive, Spring WebFlux + R2DBC, Thymeleaf).
+- **paymentservice** — RESTful-сервис платежей (reactive, Spring WebFlux + R2DBC).
 
-Открыть в IntelliJIdea, проект сразу запускается, точка входа - MyMarketAppApplication.
+## Запуск в IDE
 
-  
+Откройте корень проекта в IntelliJ IDEA. Точки входа:
+- `mymarketapp/src/main/java/org/yap/mymarketapp/MyMarketAppApplication`
+- `paymentservice/src/main/java/org/yap/paymentservice/PaymentServiceApplication`
 
-# Запуск в Docker
-Соберите проект с помощью maven (должен появиться файл .jar в каталоге target):
-`mvn clean package`  
+## Сборка
 
-Соберите образ:
-`docker build -t my-market-app .`  
+Сборка обоих модулей из корня:
+`mvn clean package`
 
-Запустите образ на порте 8080:
-`docker run -p 8080:8080 my-market-app`
-  
+## Запуск в Docker
 
-В обоих случаях, приложение будет доступно по адресу http://localhost:8080/items
+Каждый модуль собирается в отдельный образ из своей директории:
+
+```
+mymarketapp:
+  cd mymarketapp
+  mvn clean package
+  docker build -t my-market-app .
+  docker run -p 8080:8080 my-market-app
+
+paymentservice:
+  cd paymentservice
+  mvn clean package
+  docker build -t payment-service .
+  docker run -p 8081:8081 payment-service
+```
+
+Также можно запустить через docker-compose:
+1. Собрать оба приложения (ожидаются файлы .jar в target)
+```
+mvn package
+```
+
+2. Запустить docker-compose из корня проекта
+```
+docker-compose up --build
+```
+
+
+После запуска:
+- веб-приложение доступно по адресу http://localhost:8080/items
+- платежный сервис доступен по адресу http://localhost:8081/api/payments
