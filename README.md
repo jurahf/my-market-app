@@ -37,6 +37,18 @@ paymentservice:
   docker run -p 8081:8081 payment-service
 ```
 
+Также можно запустить через docker-compose:
+1. Собрать оба приложения (ожидаются файлы .jar в target)
+```
+mvn package
+```
+
+2. Запустить docker-compose из корня проекта
+```
+docker-compose up --build
+```
+
+
 После запуска:
 - веб-приложение доступно по адресу http://localhost:8080/items
 - платежный сервис доступен по адресу http://localhost:8081/api/payments

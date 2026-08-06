@@ -1,0 +1,27 @@
+services:
+  paymentservice:
+    build:
+      context: ./paymentservice
+    ports:
+      - "8081:8081"
+    container_name: paymentservice
+
+  mymarketapp:
+    build:
+      context: ./mymarketapp
+    ports:
+      - "8080:8080"
+    container_name: mymarketapp
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      PAYMENT_SERVICE_BASE_URL: http://paymentservice:8081
+    depends_on:
+      - redis
+      - paymentservice
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    container_name: redis
