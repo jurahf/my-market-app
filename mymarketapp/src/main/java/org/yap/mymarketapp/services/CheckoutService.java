@@ -29,15 +29,15 @@ public class CheckoutService {
 
     private final ItemRepository itemRepository;
 
-    private final ApiClient apiClient;
+    private final BalanceApi balanceApi;
 
     public CheckoutService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-                           CartRepository cartRepository, ItemRepository itemRepository, ApiClient apiClient) {
+                           CartRepository cartRepository, ItemRepository itemRepository, BalanceApi balanceApi) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
         this.itemRepository = itemRepository;
-        this.apiClient = apiClient;
+        this.balanceApi = balanceApi;
     }
 
     public Mono<Long> createOrder() {
@@ -58,8 +58,6 @@ public class CheckoutService {
                                 .map(item -> cart.getCount() * item.getPrice()));
                     }
 
-                    var api = new BalanceApi(apiClient);
-
                     return Mono.zip(priceMonos, prices -> {
                         long total = 0;
                         for (Object p : prices) {
@@ -68,7 +66,7 @@ public class CheckoutService {
                         return total;
                     }).flatMap(totalSum -> {
                         newOrder.setTotalSum(totalSum);
-                        return api.decBalance(new BalanceDecRequest().decValue(totalSum))
+                        return balanceApi.decBalance(new BalanceDecRequest().decValue(totalSum))
                                 .filter(balance -> balance >= 0)
                                 .onErrorResume(e -> Mono.empty())
                                 .then(orderRepository.save(newOrder));

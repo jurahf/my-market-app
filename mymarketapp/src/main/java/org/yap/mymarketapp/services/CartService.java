@@ -22,12 +22,12 @@ public class CartService {
 
     private final ItemRepository itemRepository;
 
-    private final ApiClient apiClient;
+    private final BalanceApi balanceApi;
 
-    public CartService(CartRepository repository, ItemRepository itemRepository, ApiClient apiClient) {
+    public CartService(CartRepository repository, ItemRepository itemRepository, BalanceApi balanceApi) {
         this.repository = repository;
         this.itemRepository = itemRepository;
-        this.apiClient = apiClient;
+        this.balanceApi = balanceApi;
     }
 
     public Mono<Void> toCart(long itemId, CartActionEnum action) {
@@ -72,8 +72,7 @@ public class CartService {
                 )
                 .collectList()
                 .flatMap(items -> {
-                    var api = new BalanceApi(apiClient);
-                    return api.getBalance()
+                    return balanceApi.getBalance()
                             .onErrorResume(x -> Mono.just(-1L))
                             .map(balance -> {
                                 long total = items.stream().mapToLong(i -> i.price() * i.count()).sum();
@@ -81,6 +80,4 @@ public class CartService {
                     });
                 });
     }
-
-
 }

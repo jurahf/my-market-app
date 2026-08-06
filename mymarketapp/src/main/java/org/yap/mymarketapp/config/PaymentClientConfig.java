@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.yap.mymarketapp.openapi.ApiClient;
+import org.yap.mymarketapp.openapi.api.BalanceApi;
 
 @Configuration
 public class PaymentClientConfig {
@@ -20,5 +21,10 @@ public class PaymentClientConfig {
                 .build();
 
         return new ApiClient(webClient);
+    }
+
+    @Bean
+    public BalanceApi balanceApi(ApiClient apiClient) {
+        return new BalanceApi(apiClient);
     }
 }
