@@ -13,14 +13,12 @@ import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.repositories.ItemRepository;
 import org.yap.mymarketapp.repositories.OrderItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
+import org.yap.mymarketapp.security.CurrentUserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +34,9 @@ class OrderServiceTests {
     @Mock
     private ItemRepository itemRepository;
 
+    @Mock
+    private CurrentUserService currentUser;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -45,6 +46,8 @@ class OrderServiceTests {
 
     @BeforeEach
     void setUp() {
+        when(currentUser.getCurrentUserId()).thenReturn(Mono.just(1L));
+
         item1 = new ItemModel();
         item1.setId(1L);
         item1.setTitle("Item 1");
@@ -61,6 +64,7 @@ class OrderServiceTests {
 
         orderModel = new OrderModel();
         orderModel.setId(1L);
+        orderModel.setUserId(1L);
         orderModel.setTotalSum(400L);
     }
 
@@ -69,7 +73,7 @@ class OrderServiceTests {
         OrderItem oi1 = new OrderItem(1L, 1L, 1);
         OrderItem oi2 = new OrderItem(1L, 2L, 1);
 
-        when(orderRepository.findAll()).thenReturn(Flux.just(orderModel));
+        when(orderRepository.findAllByUserId(1L)).thenReturn(Flux.just(orderModel));
         when(orderItemRepository.findByOrderId(1L)).thenReturn(Flux.just(oi1, oi2));
         when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
         when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
@@ -85,7 +89,8 @@ class OrderServiceTests {
                 })
                 .verifyComplete();
 
-        verify(orderRepository).findAll();
+        verify(currentUser).getCurrentUserId();
+        verify(orderRepository).findAllByUserId(1L);
         verify(orderItemRepository, times(1)).findByOrderId(anyLong());
     }
 
@@ -94,7 +99,7 @@ class OrderServiceTests {
         OrderItem oi1 = new OrderItem(1L, 1L, 1);
         OrderItem oi2 = new OrderItem(1L, 2L, 1);
 
-        when(orderRepository.findById(1L)).thenReturn(Mono.just(orderModel));
+        when(orderRepository.findByIdAndUserId(1L, 1L)).thenReturn(Mono.just(orderModel));
         when(orderItemRepository.findByOrderId(1L)).thenReturn(Flux.just(oi1, oi2));
         when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
         when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
@@ -109,19 +114,19 @@ class OrderServiceTests {
                 })
                 .verifyComplete();
 
-        verify(orderRepository).findById(1L);
+        verify(orderRepository).findByIdAndUserId(1L, 1L);
     }
 
     @Test
     void getById_ShouldThrowException_WhenOrderNotFound() {
-        when(orderRepository.findById(999L)).thenReturn(Mono.empty());
+        when(orderRepository.findByIdAndUserId(999L, 1L)).thenReturn(Mono.empty());
 
         orderService.getById(999L)
                 .as(StepVerifier::create)
                 .expectError(RuntimeException.class)
                 .verify();
 
-        verify(orderRepository).findById(999L);
+        verify(orderRepository).findByIdAndUserId(999L, 1L);
         verify(orderItemRepository, never()).findByOrderId(anyLong());
     }
 }

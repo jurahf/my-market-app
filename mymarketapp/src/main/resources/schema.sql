@@ -6,22 +6,27 @@ CREATE TABLE IF NOT EXISTS item (
     price BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS cart (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    item_id BIGINT NOT NULL UNIQUE,
-    count INT NOT NULL,
-    CONSTRAINT fk_cart_item FOREIGN KEY (item_id) REFERENCES item(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS orders (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    total_sum BIGINT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     login VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cart (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    item_id BIGINT NOT NULL,
+    count INT NOT NULL,
+    CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cart_item FOREIGN KEY (item_id) REFERENCES item(id) ON DELETE CASCADE,
+    CONSTRAINT uk_cart_user_item UNIQUE (user_id, item_id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    total_sum BIGINT NOT NULL,
+    CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
@@ -35,6 +40,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE INDEX IF NOT EXISTS idx_item_title ON item(title);
 CREATE INDEX IF NOT EXISTS idx_item_price ON item(price);
-CREATE INDEX IF NOT EXISTS idx_cart_item_id ON cart(item_id);
+CREATE INDEX IF NOT EXISTS idx_cart_user_item ON cart(user_id, item_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_item_id ON order_items(item_id);

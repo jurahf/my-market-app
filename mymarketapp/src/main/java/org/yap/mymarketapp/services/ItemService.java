@@ -9,6 +9,7 @@ import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.model.ItemModel;
 import org.yap.mymarketapp.repositories.CartRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
+import org.yap.mymarketapp.security.CurrentUserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,23 +26,34 @@ public class ItemService {
 
     private final CartRepository cartRepository;
 
-    public ItemService(ItemRepository repository, CartRepository cartRepository) {
+    private final CurrentUserService currentUser;
+
+    public ItemService(ItemRepository repository, CartRepository cartRepository, CurrentUserService currentUser) {
         this.repository = repository;
         this.cartRepository = cartRepository;
+        this.currentUser = currentUser;
     }
 
     @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "#id")
     public Mono<ItemDto> getById(long id) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .flatMap(item -> cartRepository.findByItemId(item.getId())
-                        .map(cart -> convertFromDB(item, cart.getCount()))
-                        .defaultIfEmpty(convertFromDB(item, 0))
+                .flatMap(item -> currentUser.getCurrentUserId()
+                        .flatMap(userId -> cartRepository.findByItemIdAndUserId(item.getId(), userId)
+                                .map(cart -> convertFromDB(item, cart.getCount()))
+                                .defaultIfEmpty(convertFromDB(item, 0)))
+                        .switchIfEmpty(Mono.defer(() -> Mono.just(convertFromDB(item, 0))))
                 );
     }
 
     @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "#request")
     public Mono<SearchResponse> getAll(SearchRequest request) {
+        return currentUser.getCurrentUserId()
+                .flatMap(userId -> buildSearchResponse(request, userId))
+                .switchIfEmpty(Mono.defer(() -> buildSearchResponse(request, null)));
+    }
+
+    private Mono<SearchResponse> buildSearchResponse(SearchRequest request, Long userId) {
         Comparator<ItemModel> comparator = getComparator(request.sort());
 
         Mono<List<ItemModel>> itemsMono;
@@ -74,12 +86,14 @@ public class ItemService {
                             ? allItems.subList(start, end)
                             : List.of();
 
-                    return Flux.fromIterable(pageItems)
-                            .flatMap(item -> cartRepository.findByItemId(item.getId())
-                                    .map(cart -> convertFromDB(item, cart.getCount()))
-                                    .defaultIfEmpty(convertFromDB(item, 0))
-                            )
-                            .collectList()
+                    Flux<ItemDto> pageDtos = userId == null
+                            ? Flux.fromIterable(pageItems).map(item -> convertFromDB(item, 0))
+                            : Flux.fromIterable(pageItems)
+                                    .flatMap(item -> cartRepository.findByItemIdAndUserId(item.getId(), userId)
+                                            .map(cart -> convertFromDB(item, cart.getCount()))
+                                            .defaultIfEmpty(convertFromDB(item, 0)));
+
+                    return pageDtos.collectList()
                             .map(dtos -> {
                                 var items = splitIntoChunks(dtos, 3);
                                 boolean hasPrevious = pageNumber > 1;
