@@ -6,7 +6,7 @@ services:
       - "8081:8081"
     container_name: paymentservice
     environment:
-      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/mymarket
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/master
     depends_on:
       keycloak:
         condition: service_healthy
@@ -23,7 +23,7 @@ services:
       PAYMENT_SERVICE_BASE_URL: http://paymentservice:8081
       KEYCLOAK_CLIENT_ID: mymarketapp
       KEYCLOAK_CLIENT_SECRET: msUyIK0UDCVCAdBrtR0apqUeysGfuUIA
-      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/mymarket/protocol/openid-connect/token
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/master/protocol/openid-connect/token
     depends_on:
       redis:
         condition: service_started
