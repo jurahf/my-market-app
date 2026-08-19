@@ -12,26 +12,27 @@ import java.util.Map;
 public class OrderHandler {
 
     private final OrderService service;
+    private final TemplateModelHelper templateModel;
 
-    public OrderHandler(OrderService service) {
+    public OrderHandler(OrderService service, TemplateModelHelper templateModel) {
         this.service = service;
+        this.templateModel = templateModel;
     }
 
     public Mono<ServerResponse> getAll(ServerRequest request) {
         return service.getAll()
                 .collectList()
-                .flatMap(orders -> ServerResponse.ok()
-                        .render("orders", Map.of("orders", orders)));
+                .flatMap(orders -> templateModel.withSecurity(request, Map.of("orders", orders)))
+                .flatMap(model -> ServerResponse.ok().render("orders", model));
     }
 
     public Mono<ServerResponse> getOrCreateOrder(ServerRequest request) {
         var id = Long.parseLong(request.pathVariable("id"));
         var newOrder = Boolean.parseBoolean(request.queryParam("newOrder").orElse("false"));
         return service.getById(id)
-                .flatMap(order -> ServerResponse.ok()
-                        .render("order", Map.of(
-                                "order", order,
-                                "newOrder", newOrder
-                        )));
+                .flatMap(order -> templateModel.withSecurity(request, Map.of(
+                        "order", order,
+                        "newOrder", newOrder)))
+                .flatMap(model -> ServerResponse.ok().render("order", model));
     }
 }

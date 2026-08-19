@@ -9,6 +9,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.yap.mymarketapp.config.ItemRouteConfig;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.handlers.ItemHandler;
+import org.yap.mymarketapp.handlers.TemplateModelHelper;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 import reactor.core.publisher.Mono;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
-@Import({ItemHandler.class, ItemRouteConfig.class})
+@Import({ItemHandler.class, ItemRouteConfig.class, TemplateModelHelper.class})
 class ItemControllerTests {
 
     @Autowired

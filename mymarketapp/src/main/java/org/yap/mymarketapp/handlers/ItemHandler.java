@@ -21,10 +21,12 @@ public class ItemHandler {
 
     private final ItemService service;
     private final CartService cartService;
+    private final TemplateModelHelper templateModel;
 
-    public ItemHandler(ItemService service, CartService cartService) {
+    public ItemHandler(ItemService service, CartService cartService, TemplateModelHelper templateModel) {
         this.service = service;
         this.cartService = cartService;
+        this.templateModel = templateModel;
     }
 
     public Mono<ServerResponse> searchItems(ServerRequest request) {
@@ -40,13 +42,12 @@ public class ItemHandler {
                 .orElse(5);
 
         return service.getAll(new SearchRequest(search, sort, pageNumber, pageSize))
-                .flatMap(response -> ServerResponse.ok()
-                        .render("items", Map.of(
-                                "items", response.items(),
-                                "search", Optional.ofNullable(response.search()).orElse(""),
-                                "sort", response.sort().toString(),
-                                "paging", response.paging()
-                        )));
+                .flatMap(response -> templateModel.withSecurity(request, Map.of(
+                        "items", response.items(),
+                        "search", Optional.ofNullable(response.search()).orElse(""),
+                        "sort", response.sort().toString(),
+                        "paging", response.paging())))
+                .flatMap(model -> ServerResponse.ok().render("items", model));
     }
 
     public Mono<ServerResponse> itemsToCart(ServerRequest request) {
@@ -102,7 +103,7 @@ public class ItemHandler {
     public Mono<ServerResponse> getItem(ServerRequest request) {
         var id = Long.parseLong(request.pathVariable("id"));
         return service.getById(id)
-                .flatMap(item -> ServerResponse.ok()
-                        .render("item", Map.of("item", item)));
+                .flatMap(item -> templateModel.withSecurity(request, Map.of("item", item)))
+                .flatMap(model -> ServerResponse.ok().render("item", model));
     }
 }

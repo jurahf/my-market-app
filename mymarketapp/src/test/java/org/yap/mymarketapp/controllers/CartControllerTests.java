@@ -11,6 +11,7 @@ import org.yap.mymarketapp.dtos.CartActionEnum;
 import org.yap.mymarketapp.dtos.CartResponse;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.handlers.CartHandler;
+import org.yap.mymarketapp.handlers.TemplateModelHelper;
 import org.yap.mymarketapp.services.CartService;
 import reactor.core.publisher.Mono;
 
@@ -21,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 
 @WebFluxTest
-@Import({CartHandler.class, CartRouteConfig.class})
+@Import({CartHandler.class, CartRouteConfig.class, TemplateModelHelper.class})
 class CartControllerTests {
 
     @Autowired

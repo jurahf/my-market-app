@@ -12,6 +12,7 @@ import org.yap.mymarketapp.config.OrderRouteConfig;
 import org.yap.mymarketapp.dtos.ItemDto;
 import org.yap.mymarketapp.dtos.OrderDto;
 import org.yap.mymarketapp.handlers.OrderHandler;
+import org.yap.mymarketapp.handlers.TemplateModelHelper;
 import org.yap.mymarketapp.services.OrderService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,7 +22,7 @@ import java.util.List;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
-@Import({OrderHandler.class, OrderRouteConfig.class})
+@Import({OrderHandler.class, OrderRouteConfig.class, TemplateModelHelper.class})
 class OrderControllerTests {
 
     @Autowired

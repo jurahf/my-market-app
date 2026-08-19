@@ -27,6 +27,7 @@ public class SecurityConfig {
                 )
                 .formLogin(Customizer.withDefaults()
                 )
+                //.logout(logout -> logout.logoutSuccessUri("/"))
                 .build();
     }
 }
