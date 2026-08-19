@@ -13,7 +13,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.Duration;
 
 @Configuration
-@EnableCaching
+//@EnableCaching
 public class RedisCacheConfig {
 
     public static final String ITEMS_CACHE = "items";
