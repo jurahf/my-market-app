@@ -5,6 +5,11 @@ services:
     ports:
       - "8081:8081"
     container_name: paymentservice
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/mymarket
+    depends_on:
+      keycloak:
+        condition: service_healthy
 
   mymarketapp:
     build:
@@ -16,12 +21,28 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       PAYMENT_SERVICE_BASE_URL: http://paymentservice:8081
+      KEYCLOAK_CLIENT_ID: mymarketapp
+      KEYCLOAK_CLIENT_SECRET: msUyIK0UDCVCAdBrtR0apqUeysGfuUIA
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/mymarket/protocol/openid-connect/token
     depends_on:
-      - redis
-      - paymentservice
+      redis:
+        condition: service_started
+      paymentservice:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     container_name: redis
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.3
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    ports:
+      - "8082:8080"
+    command: start-dev
