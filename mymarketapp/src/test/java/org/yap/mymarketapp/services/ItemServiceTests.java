@@ -85,7 +85,7 @@ class ItemServiceTests {
         when(repository.findById(1L)).thenReturn(Mono.just(item1));
         when(cartRepository.findByItemIdAndUserId(1L, 1L)).thenReturn(Mono.just(cart));
 
-        itemService.getById(1L)
+        itemService.getById(1L, 1)
                 .as(StepVerifier::create)
                 .assertNext(result -> {
                     assertThat(result).isNotNull();
@@ -106,7 +106,7 @@ class ItemServiceTests {
         when(repository.findById(1L)).thenReturn(Mono.just(item1));
         when(cartRepository.findByItemIdAndUserId(1L, 1L)).thenReturn(Mono.empty());
 
-        itemService.getById(1L)
+        itemService.getById(1L, 1)
                 .as(StepVerifier::create)
                 .assertNext(result -> {
                     assertThat(result).isNotNull();
@@ -120,7 +120,7 @@ class ItemServiceTests {
     void getById_ShouldThrowNotFoundException_WhenItemDoesNotExist() {
         when(repository.findById(999L)).thenReturn(Mono.empty());
 
-        itemService.getById(999L)
+        itemService.getById(999L, 1)
                 .as(StepVerifier::create)
                 .expectError(ResponseStatusException.class)
                 .verify();

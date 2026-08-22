@@ -34,14 +34,13 @@ public class ItemService {
         this.currentUser = currentUser;
     }
 
-    @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "#id")
-    public Mono<ItemDto> getById(long id) {
+    @Cacheable(cacheNames = RedisCacheConfig.ITEMS_CACHE, key = "{#id, #userId}")
+    public Mono<ItemDto> getById(long id, long userId) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .flatMap(item -> currentUser.getCurrentUserId()
-                        .flatMap(userId -> cartRepository.findByItemIdAndUserId(item.getId(), userId)
+                .flatMap(item -> cartRepository.findByItemIdAndUserId(item.getId(), userId)
                                 .map(cart -> convertFromDB(item, cart.getCount()))
-                                .defaultIfEmpty(convertFromDB(item, 0)))
+                                .defaultIfEmpty(convertFromDB(item, 0))
                         .switchIfEmpty(Mono.defer(() -> Mono.just(convertFromDB(item, 0))))
                 );
     }

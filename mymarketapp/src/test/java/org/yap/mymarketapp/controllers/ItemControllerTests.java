@@ -99,7 +99,7 @@ class ItemControllerTests {
     @Test
     void getItem_shouldReturnItemViewWithItemModel() {
         var item = new ItemDto(1L, "Test Item", "Desc", "/img", 100L, 5);
-        when(itemService.getById(1L)).thenReturn(Mono.just(item));
+        when(itemService.getById(1L, 1)).thenReturn(Mono.just(item));
 
         webTestClient.get().uri("/items/1")
                 .exchange()

@@ -168,7 +168,7 @@ class AuthTemplateIntegrationTests {
         var itemDto = new ItemDto(1L, "Item1", "Desc1", "/img.png", 100L, 0);
         when(itemService.getAll(any(SearchRequest.class)))
                 .thenReturn(Mono.just(new SearchResponse("", SortFieldEnum.NO, paging, List.of(List.of(itemDto)))));
-        when(itemService.getById(1L)).thenReturn(Mono.just(itemDto));
+        when(itemService.getById(1L, 1)).thenReturn(Mono.just(itemDto));
         when(cartService.getItemsInCart()).thenReturn(Mono.just(new CartResponse(List.of(itemDto), 100L, 400L)));
     }
 

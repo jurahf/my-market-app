@@ -8,6 +8,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.yap.mymarketapp.dtos.CartActionEnum;
 import org.yap.mymarketapp.dtos.SearchRequest;
 import org.yap.mymarketapp.dtos.SortFieldEnum;
+import org.yap.mymarketapp.security.CurrentUserService;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 import reactor.core.publisher.Mono;
@@ -22,11 +23,13 @@ public class ItemHandler {
     private final ItemService service;
     private final CartService cartService;
     private final TemplateModelHelper templateModel;
+    private final CurrentUserService currentUser;
 
-    public ItemHandler(ItemService service, CartService cartService, TemplateModelHelper templateModel) {
+    public ItemHandler(ItemService service, CartService cartService, TemplateModelHelper templateModel, CurrentUserService currentUser) {
         this.service = service;
         this.cartService = cartService;
         this.templateModel = templateModel;
+        this.currentUser = currentUser;
     }
 
     public Mono<ServerResponse> searchItems(ServerRequest request) {
@@ -102,8 +105,9 @@ public class ItemHandler {
 
     public Mono<ServerResponse> getItem(ServerRequest request) {
         var id = Long.parseLong(request.pathVariable("id"));
-        return service.getById(id)
+        return currentUser.getCurrentUserId().flatMap(userId ->
+                service.getById(id, userId)
                 .flatMap(item -> templateModel.withSecurity(request, Map.of("item", item)))
-                .flatMap(model -> ServerResponse.ok().render("item", model));
+                .flatMap(model -> ServerResponse.ok().render("item", model)));
     }
 }
