@@ -1,5 +1,6 @@
 package org.yap.mymarketapp.controllers;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
@@ -10,6 +11,7 @@ import org.yap.mymarketapp.config.ItemRouteConfig;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.handlers.ItemHandler;
 import org.yap.mymarketapp.handlers.TemplateModelHelper;
+import org.yap.mymarketapp.security.CurrentUserService;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 import reactor.core.publisher.Mono;
@@ -32,6 +34,14 @@ class ItemControllerTests {
 
     @MockitoBean
     private CartService cartService;
+
+    @MockitoBean
+    private CurrentUserService currentUser;
+
+    @BeforeEach
+    void setUp() {
+        when(currentUser.getCurrentUserId()).thenReturn(Mono.just(1L));
+    }
 
     @Test
     void searchItems_shouldReturnItemsViewWithModelAttributes() {
