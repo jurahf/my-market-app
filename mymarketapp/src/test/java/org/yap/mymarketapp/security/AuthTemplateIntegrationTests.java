@@ -36,6 +36,7 @@ class AuthTemplateIntegrationTests {
     @DynamicPropertySource
     static void isolatedDatabase(DynamicPropertyRegistry registry) {
         registry.add("spring.r2dbc.url", () -> "r2dbc:h2:mem:///memdb_auth;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE");
+        registry.add("spring.r2dbc.init.data-locations", () -> "classpath:data-test.sql");
     }
 
     @LocalServerPort
