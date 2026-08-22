@@ -17,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -65,29 +66,25 @@ public class CheckoutService {
                                         .map(item -> cart.getCount() * item.getPrice()));
                             }
 
-                            return Mono.zip(priceMonos, prices -> {
-                                long total = 0;
-                                for (Object p : prices) {
-                                    total += (Long) p;
-                                }
-                                return total;
-                            }).flatMap(totalSum -> {
+                            return Mono.zip(priceMonos, prices ->
+                                    Arrays.stream(prices)
+                                            .mapToLong(p -> (Long) p)
+                                            .sum()
+                            ).flatMap(totalSum -> {
                                 newOrder.setTotalSum(totalSum);
                                 return balanceApi.decBalance(new BalanceDecRequest().decValue(totalSum))
                                         .filter(balance -> balance >= 0)
                                         .onErrorResume(e -> Mono.empty())
                                         .then(orderRepository.save(newOrder));
-                            }).flatMap(savedOrder -> {
-                                List<Mono<OrderItem>> saveMonos = new ArrayList<>();
-                                for (var cart : cartList) {
-                                    saveMonos.add(orderItemRepository.save(
-                                            new OrderItem(savedOrder.getId(), cart.getItemId(), cart.getCount())));
-                                }
-                                return Flux.merge(saveMonos).collectList()
-                                        .then(cartRepository.deleteAllByUserId(userId))
-                                        .thenReturn(savedOrder.getId());
-                            });
-                        }));
+                            }).flatMap(savedOrder ->
+                                    Flux.fromIterable(cartList)
+                                            .flatMap(cart -> orderItemRepository.save(
+                                                    new OrderItem(savedOrder.getId(), cart.getItemId(), cart.getCount())))
+                                            .collectList()
+                                            .then(cartRepository.deleteAllByUserId(userId))
+                                            .thenReturn(savedOrder.getId())
+                            );
+                        })
+                );
     }
-
 }

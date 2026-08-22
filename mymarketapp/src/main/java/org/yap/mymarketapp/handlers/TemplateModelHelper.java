@@ -24,19 +24,27 @@ public class TemplateModelHelper {
     }
 
     private Mono<Map<String, Object>> securityAttributes(ServerRequest request) {
-        var username = ReactiveSecurityContextHolder.getContext()
+        var usernameMono = ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
                 .filter(this::isAuthenticated)
-                .map(Authentication::getName);
+                .map(Authentication::getName)
+                .defaultIfEmpty("");
 
-        var csrf = csrfToken(request);
+        var csrfMono = csrfToken(request);
 
-        return username.flatMap(name -> csrf.map(token -> {
-            Map<String, Object> attributes = new HashMap<>();
-            attributes.put("username", name);
-            attributes.put("csrf", token);
-            return attributes;
-        })).defaultIfEmpty(Map.of());
+        return Mono.zip(usernameMono, csrfMono)
+                .map(tuple -> {
+                    Map<String, Object> attributes = new HashMap<>();
+                    String username = tuple.getT1();
+                    CsrfToken csrf = tuple.getT2();
+
+                    if (username != null && !username.isEmpty()) {
+                        attributes.put("username", username);
+                    }
+
+                    attributes.put("csrf", csrf);
+                    return attributes;
+                });
     }
 
     private boolean isAuthenticated(Authentication authentication) {

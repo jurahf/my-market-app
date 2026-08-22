@@ -21,9 +21,6 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       PAYMENT_SERVICE_BASE_URL: http://paymentservice:8081
-      KEYCLOAK_CLIENT_ID: mymarketapp
-      KEYCLOAK_CLIENT_SECRET: msUyIK0UDCVCAdBrtR0apqUeysGfuUIA
-      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/master/protocol/openid-connect/token
     depends_on:
       redis:
         condition: service_started
