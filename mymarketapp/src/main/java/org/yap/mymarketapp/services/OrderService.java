@@ -9,6 +9,7 @@ import org.yap.mymarketapp.model.OrderModel;
 import org.yap.mymarketapp.repositories.OrderItemRepository;
 import org.yap.mymarketapp.repositories.OrderRepository;
 import org.yap.mymarketapp.repositories.ItemRepository;
+import org.yap.mymarketapp.security.CurrentUserService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,20 +22,25 @@ public class OrderService {
 
     private final ItemRepository itemRepository;
 
+    private final CurrentUserService currentUser;
+
     public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-                        ItemRepository itemRepository) {
+                        ItemRepository itemRepository, CurrentUserService currentUser) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.itemRepository = itemRepository;
+        this.currentUser = currentUser;
     }
 
     public Flux<OrderDto> getAll() {
-        return orderRepository.findAll()
+        return currentUser.getCurrentUserId()
+                .flatMapMany(orderRepository::findAllByUserId)
                 .flatMap(this::convertToDto);
     }
 
     public Mono<OrderDto> getById(long id) {
-        return orderRepository.findById(id)
+        return currentUser.getCurrentUserId()
+                .flatMap(userId -> orderRepository.findByIdAndUserId(id, userId))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
                 .flatMap(this::convertToDto);
     }

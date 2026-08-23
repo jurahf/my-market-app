@@ -15,19 +15,20 @@ import java.util.Optional;
 public class CartHandler {
 
     private final CartService service;
+    private final TemplateModelHelper templateModel;
 
-    public CartHandler(CartService service) {
+    public CartHandler(CartService service, TemplateModelHelper templateModel) {
         this.service = service;
+        this.templateModel = templateModel;
     }
 
     public Mono<ServerResponse> getCart(ServerRequest request) {
         return service.getItemsInCart()
-                .flatMap(response -> ServerResponse.ok()
-                        .render("cart", Map.of(
-                                "items", response.getItems(),
-                                "total", response.getTotal(),
-                                "balance", response.getBalance()
-                        )));
+                .flatMap(response -> templateModel.withSecurity(request, Map.of(
+                        "items", response.getItems(),
+                        "total", response.getTotal(),
+                        "balance", response.getBalance())))
+                .flatMap(model -> ServerResponse.ok().render("cart", model));
     }
 
     public Mono<ServerResponse> itemsToCart(ServerRequest request) {

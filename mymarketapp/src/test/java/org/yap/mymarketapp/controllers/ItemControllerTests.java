@@ -1,5 +1,6 @@
 package org.yap.mymarketapp.controllers;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
@@ -9,6 +10,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.yap.mymarketapp.config.ItemRouteConfig;
 import org.yap.mymarketapp.dtos.*;
 import org.yap.mymarketapp.handlers.ItemHandler;
+import org.yap.mymarketapp.handlers.TemplateModelHelper;
+import org.yap.mymarketapp.security.CurrentUserService;
 import org.yap.mymarketapp.services.CartService;
 import org.yap.mymarketapp.services.ItemService;
 import reactor.core.publisher.Mono;
@@ -20,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
-@Import({ItemHandler.class, ItemRouteConfig.class})
+@Import({ItemHandler.class, ItemRouteConfig.class, TemplateModelHelper.class})
 class ItemControllerTests {
 
     @Autowired
@@ -31,6 +34,14 @@ class ItemControllerTests {
 
     @MockitoBean
     private CartService cartService;
+
+    @MockitoBean
+    private CurrentUserService currentUser;
+
+    @BeforeEach
+    void setUp() {
+        when(currentUser.getCurrentUserId()).thenReturn(Mono.just(1L));
+    }
 
     @Test
     void searchItems_shouldReturnItemsViewWithModelAttributes() {
@@ -98,7 +109,7 @@ class ItemControllerTests {
     @Test
     void getItem_shouldReturnItemViewWithItemModel() {
         var item = new ItemDto(1L, "Test Item", "Desc", "/img", 100L, 5);
-        when(itemService.getById(1L)).thenReturn(Mono.just(item));
+        when(itemService.getById(1L, 1)).thenReturn(Mono.just(item));
 
         webTestClient.get().uri("/items/1")
                 .exchange()

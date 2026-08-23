@@ -10,6 +10,9 @@ public class CartModel {
     @Id
     private long id;
 
+    @Column("user_id")
+    private long userId;
+
     @Column("count")
     private int count;
 
@@ -19,7 +22,8 @@ public class CartModel {
     public CartModel() {
     }
 
-    public CartModel(long itemId, int count) {
+    public CartModel(long userId, long itemId, int count) {
+        this.userId = userId;
         this.itemId = itemId;
         this.count = count;
     }
@@ -30,6 +34,14 @@ public class CartModel {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
     public long getItemId() {

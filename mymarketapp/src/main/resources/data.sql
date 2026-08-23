@@ -3,7 +3,9 @@ INSERT INTO item (title, description, img_path, price) VALUES ('Ноутбук L
 INSERT INTO item (title, description, img_path, price) VALUES ('Наушники Sony WH-1000XM5', 'Беспроводные наушники с активным шумоподавлением, до 30 часов работы, поддерживают LDAC', '/images/sony_wh_1000xm5.jpg', 29999);
 INSERT INTO item (title, description, img_path, price) VALUES ('Клавиатура Logitech MX Keys', 'Беспроводная клавиатура с подсветкой, эргономичный дизайн, подключение до 3 устройств', '/images/logitech_mx_keys.jpg', 8999);
 INSERT INTO item (title, description, img_path, price) VALUES ('Монитор Samsung Odyssey G5', '27-дюймовый монитор с разрешением QHD (2560x1440), частотой 144 Гц, временем отклика 1 мс', '/images/samsung_odyssey_g5.jpg', 25999);
-INSERT INTO cart (item_id, count) VALUES (1, 2);
-INSERT INTO orders (total_sum) VALUES (41998);
+INSERT INTO users (login, password_hash) VALUES ('user1', '$2b$10$W16P9J3qtZWprtsYRolqpeIGwN6amvHG1dVaQN452hIoi6sSK/G.a');
+INSERT INTO users (login, password_hash) VALUES ('user2', '$2b$10$W16P9J3qtZWprtsYRolqpeIGwN6amvHG1dVaQN452hIoi6sSK/G.a');
+INSERT INTO cart (user_id, item_id, count) VALUES (1, 1, 2);
+INSERT INTO orders (user_id, total_sum) VALUES (1, 41998);
 INSERT INTO order_items (order_id, item_id, count) VALUES (1, 1, 1);
 INSERT INTO order_items (order_id, item_id, count) VALUES (1, 5, 1);
